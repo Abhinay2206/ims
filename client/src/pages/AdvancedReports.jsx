@@ -41,7 +41,6 @@ import {
 
 const AdvancedReports = () => {
   const theme = useTheme();
-  const [products, setProducts] = useState([]);
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -79,124 +78,177 @@ const AdvancedReports = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
-      const [productsResponse, billsResponse] = await Promise.all([
-        fetch('http://localhost:5017/api/product/'),
-        fetch('http://localhost:5017/api/bill/')
-      ]);
+      setError(null);
 
-      if (!productsResponse.ok || !billsResponse.ok) {
+      // Fetch bills
+      const billsRes = await fetch('http://localhost:5017/api/bill/');
+      const billsData = await billsRes.json();
+
+      if (!billsRes.ok) {
         throw new Error('Failed to fetch data');
       }
 
-      const productsData = await productsResponse.json();
-      const billsData = await billsResponse.json();
-
+      // Filter bills based on selected date range
       const filteredBills = billsData.filter(bill => {
-        const billDate = new Date(bill.date);
-        if (selectedTab === 0) {
+        const billDate = new Date(bill.Date);
+        if (selectedTab === 0) { // Monthly
           return billDate.getFullYear() === selectedYear && 
                  billDate.getMonth() === selectedMonth;
-        } else {
+        } else { // Yearly
           return billDate.getFullYear() === selectedYear;
         }
       });
 
-      setProducts(productsData.data);
       setBills(filteredBills);
-      
-      const report = selectedTab === 0 ? generateMonthlyReport(filteredBills, productsData.data) : generateYearlyReport(filteredBills, productsData.data);
-      setReportData(report);
 
+      // Generate report data
+      const reportData = selectedTab === 0 ? 
+        generateMonthlyReport(filteredBills) : 
+        generateYearlyReport(filteredBills);
+
+      setReportData(reportData);
       setLoading(false);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError(error.message);
+
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Failed to load report data. Please try again.');
       setLoading(false);
-      showSnackbar('Failed to load report data', 'error');
+      showSnackbar('Error loading report data', 'error');
     }
   };
 
-  const generateMonthlyReport = (billsData, productsData) => {
-    const totalRevenue = billsData.reduce((sum, bill) => sum + bill.totalAmount, 0);
-    const totalSales = billsData.reduce((sum, bill) => 
-      sum + bill.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
-    
-    const salesByProduct = {};
+  const generateMonthlyReport = (billsData) => {
+    // Calculate total revenue and sales
+    const totalRevenue = billsData.reduce((sum, bill) => sum + Number(bill.totalAmount), 0);
+    const totalSales = billsData.length;
+
+    // Calculate sales by product SKU
+    const productSales = {};
     billsData.forEach(bill => {
-      bill.items.forEach(item => {
-        if (!salesByProduct[item.productId]) {
-          salesByProduct[item.productId] = {
-            quantity: 0,
-            revenue: 0
-          };
-        }
-        salesByProduct[item.productId].quantity += item.quantity;
-        salesByProduct[item.productId].revenue += item.price * item.quantity;
-      });
+      if (!productSales[bill.productSku]) {
+        productSales[bill.productSku] = {
+          quantity: 0,
+          revenue: 0
+        };
+      }
+      productSales[bill.productSku].quantity += Number(bill.quantity) || 0;
+      productSales[bill.productSku].revenue += Number(bill.totalAmount) || 0;
     });
 
-    const productSalesData = Object.entries(salesByProduct).map(([productId, data]) => {
-      const product = productsData.find(p => p._id === productId);
-      return {
-        name: product ? product.name : 'Unknown',
-        quantity: data.quantity,
-        revenue: data.revenue
-      };
-    }).sort((a, b) => b.revenue - a.revenue);
+    // Get top selling products
+    const topProducts = Object.entries(productSales)
+      .map(([sku, data]) => ({
+        sku,
+        ...data
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
+    // Calculate sales by payment type
+    const salesByPaymentType = billsData.reduce((acc, bill) => {
+      const paymentType = bill.paymentType.toLowerCase();
+      if (!acc[paymentType]) acc[paymentType] = 0;
+      acc[paymentType] += Number(bill.totalAmount);
+      return acc;
+    }, {});
 
     return {
       totalRevenue,
       totalSales,
-      averageOrderValue: totalRevenue / billsData.length || 0,
-      topProducts: productSalesData.slice(0, 5),
-      totalOrders: billsData.length
+      averageOrderValue: totalSales ? totalRevenue / totalSales : 0,
+      topProducts,
+      salesByPaymentType,
+      salesByDay: billsData.reduce((acc, bill) => {
+        const day = new Date(bill.Date).getDate();
+        if (!acc[day]) acc[day] = 0;
+        acc[day] += Number(bill.totalAmount) || 0;
+        return acc;
+      }, {})
     };
   };
 
-  const generateYearlyReport = (billsData, productsData) => {
+  const generateYearlyReport = (billsData) => {
+    // Initialize monthly data
     const monthlyData = Array(12).fill(0).map(() => ({
       revenue: 0,
-      sales: 0,
-      orders: 0
+      orders: 0,
+      paidAmount: 0,
+      dueAmount: 0
     }));
 
+    // Populate monthly data
     billsData.forEach(bill => {
-      const month = new Date(bill.date).getMonth();
-      monthlyData[month].revenue += bill.totalAmount;
+      const month = new Date(bill.Date).getMonth();
+      monthlyData[month].revenue += Number(bill.totalAmount);
       monthlyData[month].orders += 1;
-      monthlyData[month].sales += bill.items.reduce((sum, item) => sum + item.quantity, 0);
+      
+      if (bill.paymentType.toLowerCase() === 'paid') {
+        monthlyData[month].paidAmount += Number(bill.totalAmount);
+      } else {
+        monthlyData[month].dueAmount += Number(bill.totalAmount);
+      }
     });
 
+    // Add month names
+    const monthlyBreakdown = monthlyData.map((data, index) => ({
+      month: months[index],
+      ...data
+    }));
+
+    // Calculate totals
+    const totalRevenue = monthlyData.reduce((sum, data) => sum + data.revenue, 0);
+    const totalOrders = monthlyData.reduce((sum, data) => sum + data.orders, 0);
+    const totalPaidAmount = monthlyData.reduce((sum, data) => sum + data.paidAmount, 0);
+    const totalDueAmount = monthlyData.reduce((sum, data) => sum + data.dueAmount, 0);
+
     return {
-      totalRevenue: monthlyData.reduce((sum, data) => sum + data.revenue, 0),
-      totalSales: monthlyData.reduce((sum, data) => sum + data.sales, 0),
-      totalOrders: monthlyData.reduce((sum, data) => sum + data.orders, 0),
-      monthlyBreakdown: monthlyData.map((data, index) => ({
-        month: months[index],
-        ...data
-      }))
+      totalRevenue,
+      totalOrders,
+      totalPaidAmount,
+      totalDueAmount,
+      monthlyBreakdown,
+      averageMonthlyRevenue: totalRevenue / 12
     };
   };
 
   const downloadExcel = () => {
     if (!reportData) return;
-    const ws = XLSX.utils.json_to_sheet([reportData]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Report");
-    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    
+    const worksheet = XLSX.utils.json_to_sheet([{
+      ...reportData,
+      topProducts: JSON.stringify(reportData.topProducts || []),
+      monthlyBreakdown: JSON.stringify(reportData.monthlyBreakdown || []),
+      salesByPaymentType: JSON.stringify(reportData.salesByPaymentType || {})
+    }]);
+    
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+    
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
     saveAs(data, `report_${selectedYear}_${selectedTab === 0 ? months[selectedMonth] : 'yearly'}.xlsx`);
   };
 
   const downloadPDF = () => {
     if (!reportData) return;
+    
     const doc = new jsPDF();
     doc.text(`${selectedTab === 0 ? 'Monthly' : 'Yearly'} Report - ${selectedYear}`, 20, 10);
+    
+    const reportRows = Object.entries(reportData)
+      .filter(([key]) => !['topProducts', 'monthlyBreakdown', 'salesByPaymentType'].includes(key))
+      .map(([key, value]) => [
+        key.replace(/([A-Z])/g, ' $1').toLowerCase(),
+        typeof value === 'number' ? value.toFixed(2) : value
+      ]);
+    
     doc.autoTable({
       head: [['Metric', 'Value']],
-      body: Object.entries(reportData).map(([key, value]) => [key, JSON.stringify(value)])
+      body: reportRows,
+      startY: 20
     });
+    
     doc.save(`report_${selectedYear}_${selectedTab === 0 ? months[selectedMonth] : 'yearly'}.pdf`);
   };
 
@@ -252,9 +304,11 @@ const AdvancedReports = () => {
           </Grid>
 
           {loading ? (
-            <CircularProgress />
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
           ) : error ? (
-            <Alert severity="error">{error}</Alert>
+            <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
           ) : reportData && (
             <Grid container spacing={4}>
               <Grid item xs={12}>
@@ -277,6 +331,24 @@ const AdvancedReports = () => {
                           <Typography variant="subtitle2">Average Order Value</Typography>
                           <Typography variant="h6">${reportData.averageOrderValue.toFixed(2)}</Typography>
                         </Grid>
+                        {reportData.topProducts && reportData.topProducts.length > 0 && (
+                          <Grid item xs={12}>
+                            <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>Top Selling Products</Typography>
+                            <Grid container spacing={2}>
+                              {reportData.topProducts.map((product, index) => (
+                                <Grid item xs={12} sm={6} md={4} key={index}>
+                                  <Card variant="outlined">
+                                    <CardContent>
+                                      <Typography variant="subtitle2">SKU: {product.sku}</Typography>
+                                      <Typography>Quantity: {product.quantity}</Typography>
+                                      <Typography>Revenue: ${product.revenue.toFixed(2)}</Typography>
+                                    </CardContent>
+                                  </Card>
+                                </Grid>
+                              ))}
+                            </Grid>
+                          </Grid>
+                        )}
                       </Grid>
                     ) : (
                       <Grid container spacing={2}>
@@ -288,10 +360,28 @@ const AdvancedReports = () => {
                               <YAxis />
                               <RechartsTooltip />
                               <Legend />
-                              <Bar dataKey="revenue" fill="#8884d8" name="Revenue" />
-                              <Bar dataKey="sales" fill="#82ca9d" name="Sales" />
+                              <Bar dataKey="revenue" fill={theme.palette.primary.main} name="Revenue" />
+                              <Bar dataKey="orders" fill={theme.palette.secondary.main} name="Orders" />
+                              <Bar dataKey="paidAmount" fill={theme.palette.success.main} name="Paid Amount" />
+                              <Bar dataKey="dueAmount" fill={theme.palette.error.main} name="Due Amount" />
                             </BarChart>
                           </ResponsiveContainer>
+                        </Grid>
+                        <Grid item xs={12} md={3}>
+                          <Typography variant="subtitle2">Total Revenue</Typography>
+                          <Typography variant="h6">${reportData.totalRevenue.toFixed(2)}</Typography>
+                        </Grid>
+                        <Grid item xs={12} md={3}>
+                          <Typography variant="subtitle2">Total Orders</Typography>
+                          <Typography variant="h6">{reportData.totalOrders}</Typography>
+                        </Grid>
+                        <Grid item xs={12} md={3}>
+                          <Typography variant="subtitle2">Total Paid Amount</Typography>
+                          <Typography variant="h6">${reportData.totalPaidAmount.toFixed(2)}</Typography>
+                        </Grid>
+                        <Grid item xs={12} md={3}>
+                          <Typography variant="subtitle2">Total Due Amount</Typography>
+                          <Typography variant="h6">${reportData.totalDueAmount.toFixed(2)}</Typography>
                         </Grid>
                       </Grid>
                     )}

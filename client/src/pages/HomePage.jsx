@@ -141,7 +141,7 @@ const HomePage = () => {
             </ListItem>
             <ListItem 
               button 
-              selected={currentPage === 'billDetails'} // Add BillDetails option
+              selected={currentPage === 'billDetails'}
               onClick={() => handlePageChange('billDetails')}
               sx={{ 
                 borderRadius: 2, 
@@ -213,7 +213,7 @@ const HomePage = () => {
             </ListItem>
             <ListItem 
               button
-              selected={currentPage === 'supplierAnalysis'} // Add SupplierAnalysis option
+              selected={currentPage === 'supplierAnalysis'}
               onClick={() => handlePageChange('supplierAnalysis')}
               sx={{ 
                 borderRadius: 2, 
@@ -249,6 +249,24 @@ const HomePage = () => {
             >
               <ListItemIcon><Inventory2 color={currentPage === 'inventory' ? 'primary' : 'inherit'} /></ListItemIcon>
               <ListItemText primary="Inventory" primaryTypographyProps={{ fontWeight: currentPage === 'inventory' ? 600 : 500 }} />
+            </ListItem>
+            <ListItem 
+              button 
+              selected={currentPage === 'billDetails'}
+              onClick={() => handlePageChange('billDetails')}
+              sx={{ 
+                borderRadius: 2, 
+                mb: 1,
+                '&.Mui-selected': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                  }
+                }
+              }}
+            >
+              <ListItemIcon><BarChart color={currentPage === 'billDetails' ? 'primary' : 'inherit'} /></ListItemIcon>
+              <ListItemText primary="Bill Details" primaryTypographyProps={{ fontWeight: currentPage === 'billDetails' ? 600 : 500 }} />
             </ListItem>
           </>
         )}
@@ -388,7 +406,7 @@ const HomePage = () => {
          currentPage === 'billDetails' ? <BillDetails /> :
          currentPage === 'recommendation' ? <Recommendation /> :
          currentPage === 'customerAnalysis' ? <CustomerAnalysis /> :
-         currentPage === 'supplierAnalysis' ? <SupplierAnalysis /> : // Add SupplierAnalysis component
+         currentPage === 'supplierAnalysis' ? <SupplierAnalysis /> :
          <ChartsPage />}
       </Box>
     </Box>

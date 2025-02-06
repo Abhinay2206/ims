@@ -22,7 +22,9 @@ import {
   IconButton,
   Tooltip as MuiTooltip,
   useTheme,
-  alpha
+  alpha,
+  Button,
+  Stack
 } from '@mui/material';
 import {
   BarChart,
@@ -50,7 +52,10 @@ import {
   Warning,
   CheckCircle,
   Error,
-  Info
+  Info,
+  Refresh,
+  MoreVert,
+  Download
 } from '@mui/icons-material';
 
 const SupplierAnalysis = () => {
@@ -142,250 +147,240 @@ const SupplierAnalysis = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" sx={{ backgroundColor: theme.palette.background.default }}>
+        <Stack spacing={2} alignItems="center">
+          <CircularProgress size={60} thickness={4} />
+          <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
+            Loading Analytics...
+          </Typography>
+        </Stack>
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box p={3}>
-        <Typography color="error">{error}</Typography>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" p={3} sx={{ backgroundColor: theme.palette.background.default }}>
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 2, maxWidth: 500 }}>
+          <Stack spacing={2} alignItems="center">
+            <Error color="error" sx={{ fontSize: 60 }} />
+            <Typography variant="h5" color="error" gutterBottom>
+              Error Loading Data
+            </Typography>
+            <Typography color="text.secondary" align="center">
+              {error}
+            </Typography>
+            <Button variant="contained" onClick={() => window.location.reload()} startIcon={<Refresh />}>
+              Retry
+            </Button>
+          </Stack>
+        </Paper>
       </Box>
     );
   }
 
   return (
-    <Container maxWidth="xl">
-      <Box py={4}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: theme.palette.text.primary }}>
-          Supplier Performance Analytics Dashboard
-        </Typography>
-        <Typography variant="subtitle1" gutterBottom sx={{ color: theme.palette.text.secondary, mb: 4 }}>
-          Comprehensive analysis and insights of supplier performance metrics
-        </Typography>
+    <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh' }}>
+      <Container maxWidth="xl">
+        <Box py={4}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
+            <Box>
+              <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+                Supplier Performance Analytics
+              </Typography>
+              <Typography variant="subtitle1" sx={{ color: theme.palette.text.secondary }}>
+                Real-time insights and performance metrics
+              </Typography>
+            </Box>
+          </Stack>
 
-        <Grid container spacing={3}>
-          {/* Key Performance Cards */}
-          <Grid item xs={12} md={3}>
-            <Card elevation={3} sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography variant="h6" color="primary">
-                    Classification Accuracy
-                  </Typography>
-                  <MuiTooltip title="Model prediction accuracy">
-                    <Info color="primary" />
-                  </MuiTooltip>
-                </Box>
-                <Typography variant="h3" sx={{ my: 2, fontWeight: 600 }}>
-                  {(analysisData.model_accuracy * 100).toFixed(1)}%
-                </Typography>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={analysisData.model_accuracy * 100}
-                  sx={{ 
-                    height: 8, 
-                    borderRadius: 4,
-                    bgcolor: alpha(theme.palette.primary.main, 0.1),
-                    '& .MuiLinearProgress-bar': {
-                      borderRadius: 4
-                    }
-                  }} 
-                />
-              </CardContent>
-            </Card>
-          </Grid>
+          <Grid container spacing={3}>
+            {/* Performance Distribution */}
+            <Grid item xs={12} md={6}>
+              <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+                <CardContent>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+                    <Typography variant="h6" fontWeight={600}>
+                      Performance Distribution
+                    </Typography>
+                    <IconButton size="small">
+                      <MoreVert />
+                    </IconButton>
+                  </Stack>
+                  <Box height={300}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={analysisData.performanceData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={100}
+                          innerRadius={60}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {analysisData.performanceData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={PERFORMANCE_COLORS[entry.name]}
+                              stroke={theme.palette.background.paper}
+                              strokeWidth={2}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ backgroundColor: theme.palette.background.paper, borderRadius: 8, border: `1px solid ${alpha(theme.palette.divider, 0.1)}` }} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-          <Grid item xs={12} md={3}>
-            <Card elevation={3} sx={{ bgcolor: alpha(theme.palette.success.main, 0.05) }}>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography variant="h6" color="success.main">
-                    Stock Prediction RMSE
-                  </Typography>
-                  <MuiTooltip title="Root Mean Square Error">
-                    <Info color="success" />
-                  </MuiTooltip>
-                </Box>
-                <Typography variant="h3" sx={{ my: 2, fontWeight: 600, color: 'success.main' }}>
-                  {analysisData.stock_rmse.toFixed(2)}
-                </Typography>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={100 - (analysisData.stock_rmse / 200 * 100)}
-                  color="success"
-                  sx={{ 
-                    height: 8, 
-                    borderRadius: 4,
-                    bgcolor: alpha(theme.palette.success.main, 0.1),
-                    '& .MuiLinearProgress-bar': {
-                      borderRadius: 4
-                    }
-                  }}
-                />
-              </CardContent>
-            </Card>
-          </Grid>
+            {/* Trend Analysis */}
+            <Grid item xs={12} md={8}>
+              <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+                <CardContent>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+                    <Typography variant="h6" fontWeight={600}>
+                      Historical Performance Trends
+                    </Typography>
+                    <IconButton size="small">
+                      <MoreVert />
+                    </IconButton>
+                  </Stack>
+                  <Box height={300}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={analysisData.trendData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.1)} />
+                        <XAxis dataKey="month" stroke={theme.palette.text.secondary} />
+                        <YAxis stroke={theme.palette.text.secondary} />
+                        <Tooltip contentStyle={{ backgroundColor: theme.palette.background.paper, borderRadius: 8, border: `1px solid ${alpha(theme.palette.divider, 0.1)}` }} />
+                        <Legend />
+                        <Area type="monotone" dataKey="efficiency" stackId="1" stroke={theme.palette.primary.main} fill={alpha(theme.palette.primary.main, 0.1)} />
+                        <Area type="monotone" dataKey="reliability" stackId="2" stroke={theme.palette.success.main} fill={alpha(theme.palette.success.main, 0.1)} />
+                        <Area type="monotone" dataKey="baseline" stroke={theme.palette.grey[500]} strokeDasharray="5 5" fill="none" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-          {/* Performance Distribution */}
-          <Grid item xs={12} md={6}>
-            <Card elevation={3}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Performance Distribution
-                </Typography>
-                <Box height={300}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={analysisData.performanceData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={100}
-                        innerRadius={60}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {analysisData.performanceData.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={PERFORMANCE_COLORS[entry.name]}
-                            stroke={theme.palette.background.paper}
-                            strokeWidth={2}
-                          />
+            {/* Radar Chart */}
+            <Grid item xs={12} md={4}>
+              <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+                <CardContent>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+                    <Typography variant="h6" fontWeight={600}>
+                      Supplier Metrics Comparison
+                    </Typography>
+                    <IconButton size="small">
+                      <MoreVert />
+                    </IconButton>
+                  </Stack>
+                  <Box height={300}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart outerRadius={90} data={analysisData.radarData}>
+                        <PolarGrid gridType="polygon" stroke={alpha(theme.palette.divider, 0.1)} />
+                        <PolarAngleAxis dataKey="name" stroke={theme.palette.text.secondary} />
+                        <PolarRadiusAxis angle={30} domain={[0, 100]} stroke={theme.palette.text.secondary} />
+                        <Radar name="Efficiency" dataKey="efficiency" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.2} />
+                        <Radar name="Quality" dataKey="quality" stroke={COLORS[1]} fill={COLORS[1]} fillOpacity={0.2} />
+                        <Radar name="Risk Score" dataKey="risk" stroke={COLORS[2]} fill={COLORS[2]} fillOpacity={0.2} />
+                        <Tooltip contentStyle={{ backgroundColor: theme.palette.background.paper, borderRadius: 8, border: `1px solid ${alpha(theme.palette.divider, 0.1)}` }} />
+                        <Legend />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Supplier Metrics Table */}
+            <Grid item xs={12}>
+              <Card elevation={0} sx={{ borderRadius: 3, border: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+                <CardContent>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+                    <Typography variant="h6" fontWeight={600}>
+                      Supplier Performance Details
+                    </Typography>
+                  </Stack>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Supplier Name</TableCell>
+                          <TableCell align="right">Avg Price</TableCell>
+                          <TableCell align="right">Avg Stock</TableCell>
+                          <TableCell align="right">Supply Frequency</TableCell>
+                          <TableCell align="right">Product Count</TableCell>
+                          <TableCell align="right">Efficiency Score</TableCell>
+                          <TableCell align="right">Total Value</TableCell>
+                          <TableCell align="center">Trend</TableCell>
+                          <TableCell>Performance</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {analysisData.metricsArray.map((supplier) => (
+                          <TableRow 
+                            key={supplier.name}
+                            sx={{ 
+                              '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.05) },
+                              transition: 'background-color 0.2s'
+                            }}
+                          >
+                            <TableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
+                              {supplier.name}
+                            </TableCell>
+                            <TableCell align="right">{supplier.avgPrice.toFixed(2)}</TableCell>
+                            <TableCell align="right">{supplier.avgStock.toFixed(0)}</TableCell>
+                            <TableCell align="right">{supplier.avgSupplyFreq.toFixed(1)}</TableCell>
+                            <TableCell align="right">{supplier.productCount}</TableCell>
+                            <TableCell align="right">
+                              <Box display="flex" alignItems="center" justifyContent="flex-end">
+                                <Rating 
+                                  value={supplier.efficiencyScore / 100 * 5} 
+                                  precision={0.5} 
+                                  readOnly 
+                                  size="small"
+                                />
+                              </Box>
+                            </TableCell>
+                            <TableCell align="right">{supplier.totalValue.toLocaleString()}</TableCell>
+                            <TableCell align="center">
+                              {supplier.trend === 'up' ? (
+                                <TrendingUp sx={{ color: theme.palette.success.main }} />
+                              ) : (
+                                <TrendingDown sx={{ color: theme.palette.error.main }} />
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Chip 
+                                label={supplier.performanceLabel}
+                                icon={supplier.performanceLabel === 'High' ? <CheckCircle /> : supplier.performanceLabel === 'Medium' ? <Warning /> : <Error />}
+                                sx={{ 
+                                  backgroundColor: alpha(PERFORMANCE_COLORS[supplier.performanceLabel], 0.1),
+                                  color: PERFORMANCE_COLORS[supplier.performanceLabel],
+                                  fontWeight: 500,
+                                  borderRadius: '8px'
+                                }}
+                              />
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </Pie>
-                      <Tooltip contentStyle={{ backgroundColor: theme.palette.background.paper }} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </Box>
-              </CardContent>
-            </Card>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
-
-          {/* Trend Analysis */}
-          <Grid item xs={12} md={8}>
-            <Card elevation={3}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Historical Performance Trends
-                </Typography>
-                <Box height={300}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={analysisData.trendData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip contentStyle={{ backgroundColor: theme.palette.background.paper }} />
-                      <Legend />
-                      <Area type="monotone" dataKey="efficiency" stackId="1" stroke={theme.palette.primary.main} fill={alpha(theme.palette.primary.main, 0.2)} />
-                      <Area type="monotone" dataKey="reliability" stackId="2" stroke={theme.palette.success.main} fill={alpha(theme.palette.success.main, 0.2)} />
-                      <Area type="monotone" dataKey="baseline" stroke={theme.palette.grey[500]} strokeDasharray="5 5" fill="none" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Radar Chart */}
-          <Grid item xs={12} md={4}>
-            <Card elevation={3}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Supplier Metrics Comparison
-                </Typography>
-                <Box height={300}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart outerRadius={90} data={analysisData.radarData}>
-                      <PolarGrid gridType="polygon" />
-                      <PolarAngleAxis dataKey="name" />
-                      <PolarRadiusAxis angle={30} domain={[0, 100]} />
-                      <Radar name="Efficiency" dataKey="efficiency" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.3} />
-                      <Radar name="Quality" dataKey="quality" stroke={COLORS[1]} fill={COLORS[1]} fillOpacity={0.3} />
-                      <Radar name="Risk Score" dataKey="risk" stroke={COLORS[2]} fill={COLORS[2]} fillOpacity={0.3} />
-                      <Tooltip contentStyle={{ backgroundColor: theme.palette.background.paper }} />
-                      <Legend />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Supplier Metrics Table */}
-          <Grid item xs={12}>
-            <TableContainer component={Paper} elevation={3}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Supplier Name</TableCell>
-                    <TableCell align="right">Avg Price ($)</TableCell>
-                    <TableCell align="right">Avg Stock</TableCell>
-                    <TableCell align="right">Supply Frequency</TableCell>
-                    <TableCell align="right">Product Count</TableCell>
-                    <TableCell align="right">Efficiency Score</TableCell>
-                    <TableCell align="right">Total Value ($)</TableCell>
-                    <TableCell align="center">Trend</TableCell>
-                    <TableCell>Performance</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {analysisData.metricsArray.map((supplier) => (
-                    <TableRow 
-                      key={supplier.name}
-                      sx={{ '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.05) } }}
-                    >
-                      <TableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
-                        {supplier.name}
-                      </TableCell>
-                      <TableCell align="right">{supplier.avgPrice.toFixed(2)}</TableCell>
-                      <TableCell align="right">{supplier.avgStock.toFixed(0)}</TableCell>
-                      <TableCell align="right">{supplier.avgSupplyFreq.toFixed(1)}</TableCell>
-                      <TableCell align="right">{supplier.productCount}</TableCell>
-                      <TableCell align="right">
-                        <Box display="flex" alignItems="center" justifyContent="flex-end">
-                          <Rating 
-                            value={supplier.efficiencyScore / 100 * 5} 
-                            precision={0.5} 
-                            readOnly 
-                            size="small"
-                          />
-                        </Box>
-                      </TableCell>
-                      <TableCell align="right">{supplier.totalValue.toLocaleString()}</TableCell>
-                      <TableCell align="center">
-                        {supplier.trend === 'up' ? (
-                          <TrendingUp color="success" />
-                        ) : (
-                          <TrendingDown color="error" />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={supplier.performanceLabel}
-                          icon={supplier.performanceLabel === 'High' ? <CheckCircle /> : supplier.performanceLabel === 'Medium' ? <Warning /> : <Error />}
-                          sx={{ 
-                            backgroundColor: alpha(PERFORMANCE_COLORS[supplier.performanceLabel], 0.1),
-                            color: PERFORMANCE_COLORS[supplier.performanceLabel],
-                            fontWeight: 500
-                          }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Grid>
-        </Grid>
-      </Box>
-    </Container>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 

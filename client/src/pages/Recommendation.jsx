@@ -20,7 +20,10 @@ import {
   Fade,
   Divider,
   IconButton,
-  Tooltip
+  Tooltip,
+  Container,
+  Skeleton,
+  useMediaQuery
 } from '@mui/material';
 import { 
   Warning, 
@@ -31,12 +34,14 @@ import {
   Search,
   TrendingUp,
   Inventory,
-  Refresh
+  Refresh,
+  Analytics
 } from '@mui/icons-material';
 import ProductRecommendationDialog from '../components/ProductRecommendationDialog';
 
 const Recommendation = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [inventoryRecommendations, setInventoryRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [riskFilter, setRiskFilter] = useState('all');
@@ -112,43 +117,102 @@ const Recommendation = () => {
 
   if (loading) {
     return (
-      <Box sx={{ width: '100%', mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>Loading Recommendations...</Typography>
-        <LinearProgress sx={{ width: '50%' }} />
-      </Box>
+      <Container maxWidth="xl">
+        <Box sx={{ width: '100%', mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography variant="h5" sx={{ mb: 4, fontWeight: 600 }}>
+            Analyzing Inventory Data
+            <LinearProgress sx={{ mt: 2, borderRadius: 2, height: 6 }} />
+          </Typography>
+          <Grid container spacing={4}>
+            {[1,2,3,4,5,6].map((n) => (
+              <Grid item xs={12} md={6} lg={4} key={n}>
+                <Skeleton variant="rectangular" height={320} sx={{ borderRadius: 4 }} />
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      </Container>
     );
   }
 
   return (
-    <Box sx={{ p: 3, backgroundColor: theme.palette.background.default }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
-          Inventory Insights & Recommendations
-        </Typography>
-        <Tooltip title="Refresh Recommendations">
-          <IconButton onClick={fetchRecommendations} color="primary">
-            <Refresh />
-          </IconButton>
-        </Tooltip>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between', 
+        alignItems: isMobile ? 'flex-start' : 'center', 
+        mb: 6,
+        gap: 2
+      }}>
+        <Box>
+          <Typography variant="h3" sx={{ 
+            fontWeight: 700, 
+            color: theme.palette.primary.main,
+          }}>
+            Inventory Insights
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary">
+            AI-powered recommendations for optimal stock management
+          </Typography>
+        </Box>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Chip 
+            icon={<Analytics />}
+            label={`${filteredRecommendations.length} Items`}
+            color="primary"
+            variant="outlined"
+          />
+          <Tooltip title="Refresh Analysis">
+            <IconButton 
+              onClick={fetchRecommendations} 
+              sx={{ 
+                bgcolor: theme.palette.primary.main + '10',
+                '&:hover': {
+                  bgcolor: theme.palette.primary.main + '20',
+                }
+              }}
+            >
+              <Refresh />
+            </IconButton>
+          </Tooltip>
+        </Stack>
       </Box>
 
-      <Paper elevation={2} sx={{ mb: 4, p: 3, borderRadius: 2 }}>
-        <Grid container spacing={3} alignItems="center">
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          mb: 6, 
+          p: 4, 
+          borderRadius: 4,
+          background: `linear-gradient(135deg, ${theme.palette.background.paper}, ${theme.palette.background.default})`,
+          border: `1px solid ${theme.palette.divider}`
+        }}
+      >
+        <Grid container spacing={4} alignItems="center">
           <Grid item xs={12} md={4}>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Search by name, category or SKU..."
+              placeholder="Search inventory..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Search color="action" />
+                    <Search />
                   </InputAdornment>
                 ),
               }}
-              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+              sx={{ 
+                '& .MuiOutlinedInput-root': { 
+                  borderRadius: 3,
+                  bgcolor: theme.palette.background.paper,
+                  '&:hover': {
+                    '& > fieldset': { borderColor: theme.palette.primary.main }
+                  }
+                }
+              }}
             />
           </Grid>
           <Grid item xs={12} md={4}>
@@ -158,7 +222,13 @@ const Recommendation = () => {
                 value={riskFilter}
                 label="Risk Level"
                 onChange={(e) => setRiskFilter(e.target.value)}
-                sx={{ borderRadius: 2 }}
+                sx={{ 
+                  borderRadius: 3,
+                  bgcolor: theme.palette.background.paper,
+                  '&:hover': {
+                    '& > fieldset': { borderColor: theme.palette.primary.main }
+                  }
+                }}
               >
                 <MenuItem value="all">All Risks</MenuItem>
                 <MenuItem value="high">High Risk</MenuItem>
@@ -175,7 +245,13 @@ const Recommendation = () => {
                 value={demandFilter}
                 label="Demand Level"
                 onChange={(e) => setDemandFilter(e.target.value)}
-                sx={{ borderRadius: 2 }}
+                sx={{ 
+                  borderRadius: 3,
+                  bgcolor: theme.palette.background.paper,
+                  '&:hover': {
+                    '& > fieldset': { borderColor: theme.palette.primary.main }
+                  }
+                }}
               >
                 <MenuItem value="all">All Demand</MenuItem>
                 <MenuItem value="high">High Demand</MenuItem>
@@ -187,62 +263,72 @@ const Recommendation = () => {
         </Grid>
       </Paper>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={4}>
         {filteredRecommendations.map((rec, index) => (
           <Grid item xs={12} md={6} lg={4} key={index}>
             <Fade in={true} timeout={300 + index * 100}>
               <Card 
-                elevation={2}
+                elevation={0}
                 sx={{
                   height: '100%',
-                  borderRadius: 2,
+                  borderRadius: 4,
                   position: 'relative',
                   overflow: 'visible',
                   cursor: 'pointer',
+                  border: `1px solid ${theme.palette.divider}`,
+                  background: `linear-gradient(135deg, ${theme.palette.background.paper}, ${theme.palette.background.default})`,
+                  backdropFilter: 'blur(20px)',
+                  transition: 'all 0.3s ease-in-out',
                   '&:hover': {
                     transform: 'translateY(-8px)',
-                    transition: 'transform 0.3s ease-in-out',
-                    boxShadow: theme.shadows[8]
+                    boxShadow: `0 20px 40px ${theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)'}`,
+                    border: `1px solid ${theme.palette.primary.main}30`
                   }
                 }}
                 onClick={() => handleCardClick(rec)}
               >
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>{rec.name}</Typography>
+                <CardContent sx={{ p: 4 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>{rec.name}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{rec.sku}</Typography>
+                    </Box>
                     <Chip 
                       icon={getRiskIcon(rec.risk_level)}
                       label={rec.risk_level}
                       color={getRiskColor(rec.risk_level)}
-                      size="small"
-                      sx={{ borderRadius: 1.5, fontWeight: 500 }}
+                      sx={{ 
+                        borderRadius: 2,
+                        fontWeight: 600,
+                        px: 1,
+                        '& .MuiChip-icon': { fontSize: 18 }
+                      }}
                     />
                   </Box>
                   
-                  <Stack spacing={2.5}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Category fontSize="small" color="primary" />
-                      <Typography variant="body1">
+                  <Stack spacing={3}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Category sx={{ color: theme.palette.primary.main }} />
+                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
                         {rec.category}
                       </Typography>
                     </Box>
                     
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <AttachMoney fontSize="small" color="primary" />
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <AttachMoney sx={{ color: theme.palette.primary.main }} />
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>
                         ₹{rec.price?.toFixed(2)}
                       </Typography>
                     </Box>
 
                     <Box>
-                      <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                      <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary', fontWeight: 600 }}>
                         Market Demand
                       </Typography>
                       <Rating 
                         value={rec.market_demand_score / 20} 
                         readOnly 
                         precision={0.5}
-                        size="large"
                         sx={{ 
                           '& .MuiRating-iconFilled': {
                             color: theme.palette.primary.main
@@ -251,34 +337,34 @@ const Recommendation = () => {
                       />
                     </Box>
 
-                    <Divider />
+                    <Divider sx={{ my: 1 }} />
 
-                    <Stack spacing={2}>
+                    <Stack spacing={2.5}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle2" color="text.secondary">Current Stock</Typography>
+                        <Typography variant="body2" color="text.secondary">Current Stock</Typography>
                         <Chip 
                           label={rec.current_stock}
                           color="primary"
                           size="small"
                           icon={<Inventory sx={{ fontSize: 16 }} />}
-                          sx={{ borderRadius: 1.5 }}
+                          sx={{ borderRadius: 2, fontWeight: 600 }}
                         />
                       </Box>
 
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle2" color="text.secondary">Target Stock</Typography>
+                        <Typography variant="body2" color="text.secondary">Target Stock</Typography>
                         <Chip 
                           label={rec.recommended_stock}
                           color="secondary"
                           size="small"
                           icon={<TrendingUp sx={{ fontSize: 16 }} />}
-                          sx={{ borderRadius: 1.5 }}
+                          sx={{ borderRadius: 2, fontWeight: 600 }}
                         />
                       </Box>
 
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="subtitle2" color="text.secondary">Predicted Demand</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Typography variant="body2" color="text.secondary">Predicted Demand</Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
                           {rec.predicted_demand?.toFixed(1)}x
                         </Typography>
                       </Box>
@@ -296,7 +382,7 @@ const Recommendation = () => {
         onClose={() => setDialogOpen(false)}
         product={selectedProduct}
       />
-    </Box>
+    </Container>
   );
 };
 
