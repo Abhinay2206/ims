@@ -139,40 +139,91 @@ const BillPage = () => {
   }, [searchTerm, bills, products, filter]);
 
   const handlePrint = (bill) => {
+    const product = products.find(p => p.sku === bill.productSku);
+    const productName = product ? product.name : 'Unknown Product';
+    
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <html>
         <head>
-          <title>Print Bill</title>
+          <title>Print Invoice</title>
           <style>
-            body { font-family: 'Inter', sans-serif; }
-            .bill { margin: 20px; }
-            .bill h1 { text-align: center; }
-            .bill table { width: 100%; border-collapse: collapse; }
-            .bill th, .bill td { border: 1px solid #e0e0e0; padding: 12px; text-align: left; }
+            body { font-family: 'Inter', sans-serif; margin: 0; padding: 40px; }
+            .invoice { max-width: 800px; margin: 0 auto; }
+            .invoice-header { text-align: center; margin-bottom: 40px; }
+            .invoice-header h1 { color: #1976d2; margin: 0; }
+            .invoice-header p { color: #666; margin: 5px 0; }
+            .invoice-meta { display: flex; justify-content: space-between; margin-bottom: 30px; }
+            .invoice-meta-item { flex: 1; }
+            .invoice-meta-item h4 { color: #1976d2; margin: 0 0 10px 0; }
+            .invoice-meta-item p { margin: 5px 0; color: #666; }
+            .invoice table { width: 100%; border-collapse: collapse; margin: 30px 0; }
+            .invoice th { background: #f5f5f5; padding: 15px; text-align: left; color: #1976d2; }
+            .invoice td { padding: 15px; border-bottom: 1px solid #eee; }
+            .invoice-total { text-align: right; margin: 20px 0; }
+            .invoice-total h3 { color: #1976d2; }
+            .terms { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; }
+            .terms h3 { color: #1976d2; }
+            .terms ul { padding-left: 20px; color: #666; }
           </style>
         </head>
         <body>
-          <div class="bill">
-            <h1>Bill Details</h1>
-            <p>Bill Number: ${bill.billNumber}</p>
-            <p>Date: ${new Date(bill.createdAt).toLocaleDateString()}</p>
+          <div class="invoice">
+            <div class="invoice-header">
+              <h1>INVOICE</h1>
+              <p>Your Trusted Shopping Partner</p>
+            </div>
+
+            <div class="invoice-meta">
+              <div class="invoice-meta-item">
+                <h4>Bill Details</h4>
+                <p><strong>Invoice Number:</strong> ${bill.billNumber}</p>
+                <p><strong>Date:</strong> ${new Date(bill.createdAt).toLocaleDateString()}</p>
+                <p><strong>Payment Method:</strong> ${bill.paymentType || 'N/A'}</p>
+              </div>
+              <div class="invoice-meta-item">
+                <h4>Vendor Details</h4>
+                <p><strong>Name:</strong> ${bill.vendorName || 'N/A'}</p>
+              </div>
+            </div>
+
             <table>
-              <tr>
-                <th>Product Name</th>
-                <th>Quantity</th>
-                <th>Total Amount</th>
-                <th>Vendor Name</th>
-                <th>Payment Type</th>
-              </tr>
-              <tr>
-                <td>${bill.productName}</td>
-                <td>${bill.quantity}</td>
-                <td>₹${bill.totalAmount.toFixed(2)}</td>
-                <td>${bill.vendorName || 'N/A'}</td>
-                <td>${bill.paymentType || 'N/A'}</td>
-              </tr>
+              <thead>
+                <tr>
+                  <th>Product Name</th>
+                  <th>Quantity</th>
+                  <th>Unit Price</th>
+                  <th>Total Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>${productName}</td>
+                  <td>${bill.quantity}</td>
+                  <td>₹${(bill.totalAmount / bill.quantity).toFixed(2)}</td>
+                  <td>₹${bill.totalAmount.toFixed(2)}</td>
+                </tr>
+              </tbody>
             </table>
+
+            <div class="invoice-total">
+              <h3>Total Amount: ₹${bill.totalAmount.toFixed(2)}</h3>
+            </div>
+
+            <div class="terms">
+              <h3>Terms & Conditions</h3>
+              <ul>
+                <li>Payment is due within 30 days of invoice date</li>
+                <li>All goods remain our property until paid for in full</li>
+                <li>Returns accepted within 7 days with original packaging</li>
+                <li>Damaged or defective items must be reported within 48 hours</li>
+                <li>Late payments may incur additional charges</li>
+                <li>Prices include all applicable taxes</li>
+              </ul>
+              <p style="text-align: center; margin-top: 30px; color: #666;">
+                Thank you for your business!
+              </p>
+            </div>
           </div>
         </body>
       </html>

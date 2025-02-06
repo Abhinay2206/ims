@@ -26,6 +26,14 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  manufacturing_date: {
+    type: Date,
+    required: true,
+  },
+  expire_date: {
+    type: Date,
+    required: true,
+  },
 });
 
 const Product = mongoose.model('Product', productSchema);

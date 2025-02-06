@@ -69,7 +69,9 @@ const Inventory = () => {
           stock: product.stock,
           lowStockThreshold: product.lowStockThreshold,
           price: product.price,
-          category: product.category
+          category: product.category,
+          manufacturing_date: new Date(product.manufacturing_date),
+          expiry_date: new Date(product.expiry_date)
         }));
         setInventory(products);
         setFilteredInventory(products);
@@ -145,7 +147,9 @@ const Inventory = () => {
               stock: updatedProduct.stock,
               lowStockThreshold: updatedProduct.lowStockThreshold,
               price: updatedProduct.price,
-              category: updatedProduct.category
+              category: updatedProduct.category,
+              manufacturing_date: new Date(updatedProduct.manufacturing_date),
+              expiry_date: new Date(updatedProduct.expiry_date)
             } : item
           );
           setInventory(updatedInventory);
@@ -167,7 +171,9 @@ const Inventory = () => {
           const result = await response.json();
           const newProduct = {
             id: result.product._id,
-            ...formData
+            ...formData,
+            manufacturing_date: new Date(formData.manufacturing_date),
+            expiry_date: new Date(formData.expiry_date)
           };
           setInventory([...inventory, newProduct]);
         }
@@ -180,7 +186,7 @@ const Inventory = () => {
 
   const downloadProductList = () => {
     // Convert inventory data to CSV format
-    const headers = ['Product Name', 'SKU', 'Category', 'Stock Level', 'Price'];
+    const headers = ['Product Name', 'SKU', 'Category', 'Stock Level', 'Price', 'Manufacturing Date', 'Expiry Date'];
     const csvData = [
       headers,
       ...filteredInventory.map(product => [
@@ -188,7 +194,9 @@ const Inventory = () => {
         product.sku,
         product.category,
         product.stock,
-        product.price
+        product.price,
+        product.manufacturing_date.toLocaleDateString(),
+        product.expiry_date.toLocaleDateString()
       ])
     ];
     
@@ -295,9 +303,14 @@ const Inventory = () => {
               }}
             >
               <MenuItem value="all">All Categories</MenuItem>
-              <MenuItem value="Electronics">Electronics</MenuItem>
-              <MenuItem value="Accessories">Accessories</MenuItem>
-            </Select>
+              <MenuItem value="Fruits">Fruits</MenuItem>
+              <MenuItem value="Vegetables">Vegetables</MenuItem>
+              <MenuItem value="Meat">Meat</MenuItem>
+              <MenuItem value="Dairy">Dairy</MenuItem>
+              <MenuItem value="Beverages">Beverages</MenuItem>
+              <MenuItem value="Grains">Grains</MenuItem>
+              <MenuItem value="Groceries">Groceries</MenuItem>
+              </Select>
           </FormControl>
           <IconButton 
             onClick={fetchInventory} 
@@ -326,6 +339,8 @@ const Inventory = () => {
                   <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Stock Level</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Price</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Manufacturing Date</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Expiry Date</TableCell>
                   {isAdmin && <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>}
                 </TableRow>
               </TableHead>
@@ -375,6 +390,22 @@ const Inventory = () => {
                       </Box>
                     </TableCell>
                     <TableCell>₹{Math.floor(product.price)}</TableCell>
+                    <TableCell>{product.manufacturing_date.toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={product.expiry_date.toLocaleDateString()}
+                        size="small"
+                        sx={{
+                          bgcolor: product.expiry_date < new Date() ? 
+                            alpha(theme.palette.error.main, 0.1) :
+                            alpha(theme.palette.success.main, 0.1),
+                          color: product.expiry_date < new Date() ?
+                            theme.palette.error.main :
+                            theme.palette.success.main,
+                          fontWeight: 500
+                        }}
+                      />
+                    </TableCell>
                     {isAdmin && (
                       <TableCell align="right">
                         <IconButton 

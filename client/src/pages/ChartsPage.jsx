@@ -16,7 +16,6 @@ import {
   Button
 } from '@mui/material';
 import { 
-  ScatterChart, Scatter,
   BarChart, Bar, 
   XAxis, YAxis, 
   CartesianGrid, 
@@ -87,16 +86,6 @@ const ChartsPage = () => {
 
   const renderFullscreenChart = () => {
     switch(fullscreenChart) {
-      case 'scatter':
-        return (
-          <ScatterChart width={800} height={600}>
-            <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
-            <XAxis dataKey="price" name="Price" tick={{ fill: theme.palette.text.secondary }} />
-            <YAxis dataKey="salesVolume" name="Sales Volume" tick={{ fill: theme.palette.text.secondary }} />
-            <ChartTooltip cursor={{ strokeDasharray: '3 3' }} />
-            <Scatter data={productData} fill={theme.palette.primary.main} name="Products" />
-          </ScatterChart>
-        );
       case 'bar':
         return (
           <BarChart width={800} height={600} data={productData} layout="vertical">
@@ -140,38 +129,6 @@ const ChartsPage = () => {
         <LinearProgress sx={{ mb: 4 }} />
       ) : (
         <Grid container spacing={4}>
-          <Grid item xs={12}>
-            <Card sx={{ 
-              boxShadow: theme.shadows[3], 
-              borderRadius: 4,
-              transition: 'transform 0.2s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: theme.shadows[6],
-              }
-            }}>
-              <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
-                    Price vs Sales Volume Analysis
-                  </Typography>
-                  <IconButton onClick={() => setFullscreenChart('scatter')}>
-                    <Fullscreen />
-                  </IconButton>
-                </Box>
-                <ResponsiveContainer width="100%" height={400}>
-                  <ScatterChart>
-                    <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
-                    <XAxis dataKey="price" name="Price" tick={{ fill: theme.palette.text.secondary }} />
-                    <YAxis dataKey="salesVolume" name="Sales Volume" tick={{ fill: theme.palette.text.secondary }} />
-                    <ChartTooltip cursor={{ strokeDasharray: '3 3' }} />
-                    <Scatter data={productData} fill={theme.palette.primary.main} name="Products" />
-                  </ScatterChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
           <Grid item xs={12}>
             <Card sx={{ 
               boxShadow: theme.shadows[3], 
@@ -257,7 +214,6 @@ const ChartsPage = () => {
         fullWidth
       >
         <DialogTitle>
-          {fullscreenChart === 'scatter' && 'Price vs Sales Volume Analysis'}
           {fullscreenChart === 'bar' && 'Stock Level Heatmap'}
           {fullscreenChart === 'composed' && 'Sales Volume vs Price Trend'}
         </DialogTitle>

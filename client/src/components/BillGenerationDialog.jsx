@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogTitle, 
@@ -22,7 +22,9 @@ import {
   useTheme,
   alpha,
   Divider,
-  MenuItem
+  MenuItem,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import { Close, Receipt, Print, ShoppingCart, Person, Payments } from '@mui/icons-material';
 
@@ -40,13 +42,39 @@ const BillGenerationDialog = ({
   const [billNumber] = useState(`BILL-${Date.now()}-${Math.floor(Math.random() * 1000)}`); 
   const [billDetails, setBillDetails] = useState(null);
   const [vendorName, setVendorName] = useState(''); 
-  const [paymentType, setPaymentType] = useState('paid'); 
+  const [paymentType, setPaymentType] = useState('paid');
+  const [discountReport, setDiscountReport] = useState(null);
+  const [applyDiscount, setApplyDiscount] = useState(false);
+  const [daysToExpiry, setDaysToExpiry] = useState(null);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      fetchDiscountRecommendations();
+    }
+  }, [selectedProduct]);
+
+  const fetchDiscountRecommendations = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/discount-recommendations');
+      const data = await response.json();
+      
+      // Find discount suggestion for selected product
+      const productDiscount = data.recommendations.find(item => item.sku === selectedProduct.sku);
+      if (productDiscount && productDiscount.status === "Active") {
+        setDiscountReport(productDiscount);
+        setDaysToExpiry(productDiscount.days_until_expiry);
+      }
+    } catch (error) {
+      console.error('Error fetching discount recommendations:', error);
+    }
+  };
 
   const handleCloseBillDialog = () => {
     setShowBillDialog(false);
     setBillDetails(null);
     setVendorName(''); 
-    setPaymentType('paid'); 
+    setPaymentType('paid');
+    setApplyDiscount(false);
   };
 
   const handleGenerateBillClick = () => {
@@ -55,24 +83,126 @@ const BillGenerationDialog = ({
     }
 
     const quantity = parseInt(saleQuantity);
-    const total = Math.floor(selectedProduct.price * quantity);
+    let price = selectedProduct.price;
+    if (applyDiscount && discountReport) {
+      price = discountReport.discounted_price;
+    }
+    const total = Math.floor(price * quantity);
     setBillDetails({
       billNumber: billNumber,
       product: selectedProduct,
       quantity: quantity,
-      total: total, 
-      vendorName, 
-      paymentType
+      total: total,
+      vendorName,
+      paymentType,
+      discountApplied: applyDiscount ? discountReport.suggested_discount : 0
     });
     handleGenerateBill();
     setShowBillDialog(true);
   };
 
   const handlePrint = () => {
-    window.print();
+    if (!billDetails) return;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Invoice</title>
+          <style>
+            body { font-family: 'Inter', sans-serif; margin: 0; padding: 40px; }
+            .invoice { max-width: 800px; margin: 0 auto; }
+            .invoice-header { text-align: center; margin-bottom: 40px; }
+            .invoice-header h1 { color: #1976d2; margin: 0; }
+            .invoice-header p { color: #666; margin: 5px 0; }
+            .invoice-meta { display: flex; justify-content: space-between; margin-bottom: 30px; }
+            .invoice-meta-item { flex: 1; }
+            .invoice-meta-item h4 { color: #1976d2; margin: 0 0 10px 0; }
+            .invoice-meta-item p { margin: 5px 0; color: #666; }
+            .invoice table { width: 100%; border-collapse: collapse; margin: 30px 0; }
+            .invoice th { background: #f5f5f5; padding: 15px; text-align: left; color: #1976d2; }
+            .invoice td { padding: 15px; border-bottom: 1px solid #eee; }
+            .invoice-total { text-align: right; margin: 20px 0; }
+            .invoice-total h3 { color: #1976d2; }
+            .terms { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; }
+            .terms h3 { color: #1976d2; }
+            .terms ul { padding-left: 20px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="invoice">
+            <div class="invoice-header">
+              <h1>INVOICE</h1>
+              <p>Your Trusted Shopping Partner</p>
+            </div>
+
+            <div class="invoice-meta">
+              <div class="invoice-meta-item">
+                <h4>Bill Details</h4>
+                <p><strong>Invoice Number:</strong> ${billDetails.billNumber}</p>
+                <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Payment Method:</strong> ${billDetails.paymentType}</p>
+              </div>
+              <div class="invoice-meta-item">
+                <h4>Vendor Details</h4>
+                <p><strong>Name:</strong> ${billDetails.vendorName}</p>
+              </div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Product Name</th>
+                  <th>SKU</th>
+                  <th>Quantity</th>
+                  <th>Unit Price</th>
+                  <th>Discount</th>
+                  <th>Total Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>${billDetails.product.name}</td>
+                  <td>${billDetails.product.sku}</td>
+                  <td>${billDetails.quantity}</td>
+                  <td>₹${Math.ceil(selectedProduct.price)}</td>
+                  <td>${billDetails.discountApplied}%</td>
+                  <td>₹${billDetails.total}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="invoice-total">
+              <h3>Total Amount: ₹${billDetails.total}</h3>
+            </div>
+
+            <div class="terms">
+              <h3>Terms & Conditions</h3>
+              <ul>
+                <li>Payment is due within 30 days of invoice date</li>
+                <li>All goods remain our property until paid for in full</li>
+                <li>Returns accepted within 7 days with original packaging</li>
+                <li>Damaged or defective items must be reported within 48 hours</li>
+                <li>Late payments may incur additional charges</li>
+                <li>Prices include all applicable taxes</li>
+              </ul>
+              <p style="text-align: center; margin-top: 30px; color: #666;">
+                Thank you for your business!
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   };
 
-  const totalAmount = selectedProduct ? selectedProduct.price * parseInt(saleQuantity) : 0;
+  const totalAmount = selectedProduct ? 
+    (applyDiscount && discountReport ? 
+      discountReport.discounted_price * parseInt(saleQuantity) :
+      selectedProduct.price * parseInt(saleQuantity)) : 
+    0;
   const currentDate = new Date().toLocaleDateString();
 
   return (
@@ -174,6 +304,24 @@ const BillGenerationDialog = ({
               />
             </Box>
 
+            {daysToExpiry !== null && discountReport && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography color={daysToExpiry < 3 ? "error.main" : "warning.main"}>
+                  Days to Expiry: {daysToExpiry}
+                </Typography>
+                <FormControlLabel
+                  control={
+                    <Checkbox 
+                      checked={applyDiscount}
+                      onChange={(e) => setApplyDiscount(e.target.checked)}
+                      color="primary"
+                    />
+                  }
+                  label={`Apply ${discountReport.suggested_discount}% Discount (₹${discountReport.discounted_price} per unit)`}
+                />
+              </Box>
+            )}
+
             <TextField
               label="Vendor Name"
               value={vendorName}
@@ -216,6 +364,11 @@ const BillGenerationDialog = ({
               >
                 <Typography variant="h6" align="right" color="primary.main">
                   Total: ₹{totalAmount > 0 ? totalAmount.toLocaleString() : '0'} 
+                  {applyDiscount && discountReport && (
+                    <Typography variant="caption" color="success.main" sx={{ ml: 1 }}>
+                      ({discountReport.suggested_discount}% off)
+                    </Typography>
+                  )}
                 </Typography>
               </Paper>
             )}
@@ -311,6 +464,7 @@ const BillGenerationDialog = ({
                         <TableCell sx={{ fontWeight: 600 }}>SKU</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 600 }}>Price</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 600 }}>Quantity</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 600 }}>Discount</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 600 }}>Total</TableCell>
                       </TableRow>
                     </TableHead>
@@ -320,6 +474,7 @@ const BillGenerationDialog = ({
                         <TableCell>{billDetails.product.sku}</TableCell>
                         <TableCell align="right">₹{Math.ceil(selectedProduct.price)}</TableCell>
                         <TableCell align="right">{billDetails.quantity}</TableCell>
+                        <TableCell align="right">{billDetails.discountApplied}%</TableCell>
                         <TableCell align="right">₹{billDetails.total}</TableCell>
                       </TableRow>
                     </TableBody>

@@ -19,6 +19,7 @@ import InventoryTable from '../components/InventoryTable';
 import StockUpdateDialog from '../components/StockUpdateDialog';
 import BillGenerationDialog from '../components/BillGenerationDialog';
 import LowStockAlertsDialog from '../components/LowStockAlerts';
+import ExpiryDialog from '../components/ExpiryDialog';
 
 const Dashboard = () => {
   const theme = useTheme();
@@ -39,6 +40,7 @@ const Dashboard = () => {
   const [vendorName, setVendorName] = useState(''); 
   const [paymentType, setPaymentType] = useState('paid');
   const [alertsDialog, setAlertsDialog] = useState(false);
+  const [expiryDialog, setExpiryDialog] = useState(false);
   const [billNumber, setBillNumber] = useState(`BILL-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
 
   const itemsPerPage = 5;
@@ -211,6 +213,24 @@ const Dashboard = () => {
               variant="soft"
               color="warning"
               startIcon={<Warning />}
+              onClick={() => setExpiryDialog(true)}
+              sx={{
+                borderRadius: 3,
+                px: 3,
+                py: 1.5,
+                bgcolor: alpha(theme.palette.error.main, 0.1),
+                color: theme.palette.error.dark,
+                '&:hover': {
+                  bgcolor: alpha(theme.palette.error.main, 0.2)
+                }
+              }}
+            >
+              Expiry Status
+            </Button>
+            <Button
+              variant="soft"
+              color="warning"
+              startIcon={<Warning />}
               onClick={() => setAlertsDialog(true)}
               disabled={lowStockItems.length === 0}
               sx={{
@@ -290,6 +310,11 @@ const Dashboard = () => {
           setAlertsDialog={setAlertsDialog}
           setSelectedProduct={setSelectedProduct}
           setStockUpdateDialog={setStockUpdateDialog}
+        />
+
+        <ExpiryDialog
+          open={expiryDialog}
+          onClose={() => setExpiryDialog(false)}
         />
       </Stack>
     </Container>

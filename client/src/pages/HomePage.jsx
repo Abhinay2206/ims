@@ -24,7 +24,8 @@ import {
   BarChart,
   Group,
   Warehouse,
-  Lightbulb
+  Lightbulb,
+  Analytics
 } from '@mui/icons-material';
 import Dashboard from './Dashboard';
 import Inventory from './Inventory';
@@ -33,6 +34,7 @@ import UserManagement from './UserManagement';
 import AdvancedReports from './AdvancedReports';
 import BillDetails from './BillDetails'; 
 import Recommendation from './Recommendation';
+import CustomerAnalysis from './CustomerAnalysis';
 
 const drawerWidth = 280;
 
@@ -189,6 +191,24 @@ const HomePage = () => {
             >
               <ListItemIcon><Lightbulb color={currentPage === 'recommendation' ? 'primary' : 'inherit'} /></ListItemIcon>
               <ListItemText primary="Recommendations" primaryTypographyProps={{ fontWeight: currentPage === 'recommendation' ? 600 : 500 }} />
+            </ListItem>
+            <ListItem 
+              button
+              selected={currentPage === 'customerAnalysis'}
+              onClick={() => handlePageChange('customerAnalysis')}
+              sx={{ 
+                borderRadius: 2, 
+                mb: 1,
+                '&.Mui-selected': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                  }
+                }
+              }}
+            >
+              <ListItemIcon><Analytics color={currentPage === 'customerAnalysis' ? 'primary' : 'inherit'} /></ListItemIcon>
+              <ListItemText primary="Customer Analysis" primaryTypographyProps={{ fontWeight: currentPage === 'customerAnalysis' ? 600 : 500 }} />
             </ListItem>
           </>
         ) : (
@@ -348,6 +368,7 @@ const HomePage = () => {
          currentPage === 'advancedReports' ? <AdvancedReports /> :
          currentPage === 'billDetails' ? <BillDetails /> :
          currentPage === 'recommendation' ? <Recommendation /> :
+         currentPage === 'customerAnalysis' ? <CustomerAnalysis /> :
          <ChartsPage />}
       </Box>
     </Box>

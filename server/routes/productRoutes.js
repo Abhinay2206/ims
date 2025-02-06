@@ -5,7 +5,7 @@ const router = express.Router();
 // Route to add a new product
 router.post('/add', async (req, res) => {
   try {
-    const { name, sku, stock, lowStockThreshold, price, category } = req.body;
+    const { name, sku, stock, lowStockThreshold, price, category, manufacturing_date, expiry_date } = req.body;
     
     // Create new product
     const newProduct = new Product({
@@ -15,6 +15,8 @@ router.post('/add', async (req, res) => {
       lowStockThreshold,
       price,
       category,
+      manufacturing_date,
+      expiry_date
     });
 
     // Save the product to the database
@@ -30,7 +32,7 @@ router.post('/add', async (req, res) => {
 // Route to get all products
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find().select('name sku stock lowStockThreshold price category');
+    const products = await Product.find().select('name sku stock lowStockThreshold price category manufacturing_date expiry_date');
     res.status(200).json({
       success: true,
       count: products.length,
@@ -50,11 +52,11 @@ router.get('/', async (req, res) => {
 router.put('/update/:sku', async (req, res) => {
   try {
     const { sku } = req.params;
-    const { name, stock, lowStockThreshold, price, category } = req.body;
+    const { name, stock, lowStockThreshold, price, category, manufacturing_date, expiry_date } = req.body;
 
     const updatedProduct = await Product.findOneAndUpdate(
       { sku },
-      { name, stock, lowStockThreshold, price, category },
+      { name, stock, lowStockThreshold, price, category, manufacturing_date, expiry_date },
       { new: true, runValidators: true }
     );
 
