@@ -11,45 +11,80 @@ import {
   Typography, 
   Button, 
   Chip, 
-  CircularProgress 
+  CircularProgress,
+  Zoom,
+  Fade,
+  Avatar,
+  Badge,
+  Divider
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import WarningIcon from '@mui/icons-material/Warning';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import PersonIcon from '@mui/icons-material/Person';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
-    borderRadius: 16,
-    maxWidth: 600,
-    height: '80vh',
-    maxHeight: 700,
+    borderRadius: 24,
+    maxWidth: 700,
+    height: '85vh', 
+    maxHeight: 800,
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    background: theme.palette.background.default,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+    border: '1px solid rgba(255,255,255,0.2)',
+    backdropFilter: 'blur(8px)'
   }
 }));
 
 const MessageContainer = styled('div')({
   flexGrow: 1,
   overflowY: 'auto',
-  padding: '20px',
+  padding: '24px',
   scrollBehavior: 'smooth',
   '&::-webkit-scrollbar': {
-    width: '8px',
+    width: '6px',
   },
   '&::-webkit-scrollbar-thumb': {
-    backgroundColor: '#bdbdbd',
-    borderRadius: '4px',
+    backgroundColor: '#e0e0e0',
+    borderRadius: '8px',
+  },
+  '&::-webkit-scrollbar-track': {
+    backgroundColor: 'transparent'
   }
 });
 
 const StyledChip = styled(Chip)(({ theme }) => ({
   margin: '4px',
+  borderRadius: '16px',
+  transition: 'all 0.2s ease',
   '&:hover': {
-    backgroundColor: theme.palette.primary.light,
+    backgroundColor: theme.palette.primary.main,
     color: theme.palette.primary.contrastText,
+    transform: 'translateY(-2px)',
+    boxShadow: '0 4px 12px rgba(33,150,243,0.2)'
+  }
+}));
+
+const MessagePaper = styled(Paper)(({ isBot }) => ({
+  padding: 16,
+  marginBottom: 16,
+  maxWidth: '80%',
+  marginLeft: isBot ? 0 : 'auto',
+  marginRight: isBot ? 'auto' : 0,
+  backgroundColor: isBot ? '#ffffff' : '#e3f2fd',
+  borderRadius: 16,
+  boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+  transition: 'all 0.3s ease',
+  position: 'relative',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
   }
 }));
 
@@ -137,18 +172,20 @@ const ChatBotDialog = ({ open, onClose }) => {
     })).slice(0, 10);
 
     return (
-      <div style={{ height: 300, width: '100%', marginTop: 16 }}>
-        <ResponsiveContainer>
-          <LineChart data={stockData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="stock" stroke="#2196F3" name="Current Stock" />
-            <Line type="monotone" dataKey="threshold" stroke="#FF4842" name="Threshold" />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <Fade in timeout={800}>
+        <div style={{ height: 300, width: '100%', marginTop: 16, padding: 16, backgroundColor: '#f8f9fa', borderRadius: 12 }}>
+          <ResponsiveContainer>
+            <LineChart data={stockData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+              <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fill: '#666' }} />
+              <YAxis tick={{ fill: '#666' }} />
+              <Tooltip contentStyle={{ borderRadius: 8, boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }} />
+              <Line type="monotone" dataKey="stock" stroke="#2196F3" strokeWidth={2} dot={{ strokeWidth: 2 }} name="Current Stock" />
+              <Line type="monotone" dataKey="threshold" stroke="#FF4842" strokeWidth={2} dot={{ strokeWidth: 2 }} name="Threshold" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </Fade>
     );
   };
 
@@ -180,7 +217,7 @@ const ChatBotDialog = ({ open, onClose }) => {
       const dueBills = bills.filter(b => b.paymentType.toLowerCase() === 'due').length;
       const totalAmount = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
       
-      response = `📊 Payment Status Overview:\n• Paid Bills: ${paidBills}\n• Due Bills: ${dueBills}\n• Total Amount: $${totalAmount.toFixed(2)}`;
+      response = `📊 Payment Status Overview:\n• Paid Bills: ${paidBills}\n• Due Bills: ${dueBills}\n• Total Amount: ₹${totalAmount.toFixed(2)}`;
     }
     else if (queryLower.includes('category')) {
       const categories = {};
@@ -212,7 +249,7 @@ const ChatBotDialog = ({ open, onClose }) => {
       
       response = foundProducts.length > 0
         ? `📦 Found ${foundProducts.length} matching products:\n${foundProducts.map(p => 
-            `• ${p.name}\n  - Stock: ${p.stock}\n  - Price: $${p.price}\n  - Category: ${p.category}\n  - Threshold: ${p.lowStockThreshold}`
+            `• ${p.name}\n  - Stock: ${p.stock}\n  - Price: ₹${p.price}\n  - Category: ${p.category}\n  - Threshold: ${p.lowStockThreshold}`
           ).join('\n')}`
         : "❌ No products found matching your search term.";
     }
@@ -241,87 +278,119 @@ const ChatBotDialog = ({ open, onClose }) => {
   };
 
   return (
-    <StyledDialog open={open} onClose={onClose}>
+    <StyledDialog open={open} onClose={onClose} TransitionComponent={Zoom}>
       <DialogTitle sx={{ 
-        background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+        background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
         color: 'white',
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        padding: '16px 24px',
+        borderBottom: '1px solid rgba(255,255,255,0.1)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>Advanced Inventory Assistant</span>
-          {error && <WarningIcon color="error" />}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Avatar sx={{ bgcolor: 'white' }}>
+            <SmartToyIcon sx={{ color: '#1976D2' }} />
+          </Avatar>
+          <div>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>Inventory Assistant</Typography>
+            <Typography variant="caption" sx={{ opacity: 0.9 }}>Always here to help</Typography>
+          </div>
         </div>
-        <IconButton color="inherit" onClick={onClose} size="small">
+        <IconButton 
+          color="inherit" 
+          onClick={onClose} 
+          size="small"
+          sx={{ 
+            '&:hover': { 
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              transform: 'rotate(90deg)',
+              transition: 'all 0.3s ease'
+            }
+          }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {loading && (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
-            <CircularProgress />
+            <CircularProgress size={40} thickness={4} />
           </div>
         )}
         
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {suggestedQueries.map((query, index) => (
-            <StyledChip
-              key={index}
-              label={query.text}
-              onClick={() => processQuery(query.text)}
-              variant="outlined"
-              color="primary"
-              size="small"
-            />
-          ))}
-        </div>
+        <Paper elevation={0} sx={{ p: 2, backgroundColor: '#f5f5f5', borderRadius: 3 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, color: '#666' }}>Suggested Queries:</Typography>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {suggestedQueries.map((query, index) => (
+              <StyledChip
+                key={index}
+                label={query.text}
+                onClick={() => processQuery(query.text)}
+                variant="outlined"
+                color="primary"
+                size="small"
+              />
+            ))}
+          </div>
+        </Paper>
 
         <MessageContainer>
           {messages.map((message, index) => (
-            <Paper
-              key={index}
-              elevation={1}
-              sx={{
-                p: 2,
-                mb: 2,
-                maxWidth: '80%',
-                ml: message.isBot ? 0 : 'auto',
-                mr: message.isBot ? 'auto' : 0,
-                backgroundColor: message.isBot ? '#f8f9fa' : '#e3f2fd',
-                borderRadius: 2,
-                whiteSpace: 'pre-line',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                }
-              }}
-            >
-              <Typography>{message.text}</Typography>
-              {message.includeChart && generateStockTrendChart()}
-            </Paper>
+            <Fade in timeout={500} key={index}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
+                {message.isBot ? (
+                  <Avatar sx={{ bgcolor: '#1976D2' }}>
+                    <SmartToyIcon />
+                  </Avatar>
+                ) : (
+                  <Avatar sx={{ bgcolor: '#4CAF50' }}>
+                    <PersonIcon />
+                  </Avatar>
+                )}
+                <MessagePaper isBot={message.isBot}>
+                  <Typography sx={{ whiteSpace: 'pre-line' }}>{message.text}</Typography>
+                  {message.includeChart && generateStockTrendChart()}
+                </MessagePaper>
+              </div>
+            </Fade>
           ))}
           <div ref={messagesEndRef} />
         </MessageContainer>
 
         {showScrollButton && (
-          <IconButton
-            sx={{
-              position: 'absolute',
-              bottom: 100,
-              right: 24,
-              backgroundColor: 'white',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            }}
-            onClick={scrollToBottom}
-          >
-            <KeyboardArrowUpIcon />
-          </IconButton>
+          <Zoom in>
+            <IconButton
+              sx={{
+                position: 'absolute',
+                bottom: 100,
+                right: 24,
+                backgroundColor: 'white',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                '&:hover': {
+                  backgroundColor: '#f5f5f5',
+                  transform: 'translateY(-2px)'
+                }
+              }}
+              onClick={scrollToBottom}
+            >
+              <KeyboardArrowUpIcon />
+            </IconButton>
+          </Zoom>
         )}
 
-        <div style={{ display: 'flex', gap: 8, padding: '8px 0' }}>
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 2, 
+            borderRadius: 3,
+            backgroundColor: 'white',
+            display: 'flex', 
+            gap: 1,
+            alignItems: 'center'
+          }}
+        >
           <TextField
             fullWidth
             value={input}
@@ -333,6 +402,13 @@ const ChatBotDialog = ({ open, onClose }) => {
             sx={{
               '& .MuiOutlinedInput-root': {
                 borderRadius: 28,
+                backgroundColor: '#f5f5f5',
+                '&:hover': {
+                  backgroundColor: '#f0f0f0'
+                },
+                '&.Mui-focused': {
+                  backgroundColor: '#fff'
+                }
               }
             }}
           />
@@ -342,17 +418,21 @@ const ChatBotDialog = ({ open, onClose }) => {
             sx={{
               backgroundColor: '#2196F3',
               color: 'white',
+              width: 40,
+              height: 40,
               '&:hover': {
                 backgroundColor: '#1976D2',
+                transform: 'scale(1.05)'
               },
               '&.Mui-disabled': {
-                backgroundColor: '#bdbdbd',
-              }
+                backgroundColor: '#bdbdbd'
+              },
+              transition: 'all 0.2s ease'
             }}
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : <SendIcon />}
           </IconButton>
-        </div>
+        </Paper>
       </DialogContent>
     </StyledDialog>
   );

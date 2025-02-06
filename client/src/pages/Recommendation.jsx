@@ -146,7 +146,7 @@ const Recommendation = () => {
         gap: 2
       }}>
         <Box>
-          <Typography variant="h3" sx={{ 
+          <Typography variant="h4" sx={{ 
             fontWeight: 700, 
             color: theme.palette.primary.main,
           }}>

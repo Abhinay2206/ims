@@ -119,7 +119,7 @@ const HomePage = () => {
               }}
             >
               <ListItemIcon><Warehouse color={currentPage === 'inventory' ? 'primary' : 'inherit'} /></ListItemIcon>
-              <ListItemText primary="Inventory Management" primaryTypographyProps={{ fontWeight: currentPage === 'inventory' ? 600 : 500 }} />
+              <ListItemText primary="Inventory" primaryTypographyProps={{ fontWeight: currentPage === 'inventory' ? 600 : 500 }} />
             </ListItem>
             <ListItem 
               button 
@@ -191,7 +191,7 @@ const HomePage = () => {
               }}
             >
               <ListItemIcon><Lightbulb color={currentPage === 'recommendation' ? 'primary' : 'inherit'} /></ListItemIcon>
-              <ListItemText primary="Recommendations" primaryTypographyProps={{ fontWeight: currentPage === 'recommendation' ? 600 : 500 }} />
+              <ListItemText primary="Product Analysis" primaryTypographyProps={{ fontWeight: currentPage === 'recommendation' ? 600 : 500 }} />
             </ListItem>
             <ListItem 
               button

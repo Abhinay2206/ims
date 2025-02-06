@@ -22,6 +22,7 @@ import BillGenerationDialog from '../components/BillGenerationDialog';
 import LowStockAlertsDialog from '../components/LowStockAlerts';
 import ExpiryDialog from '../components/ExpiryDialog';
 import ChatbotDialog from '../components/ChatBotDialog';
+import MultipleBillDialog from '../components/MultipleBillDialog';
 
 const Dashboard = () => {
   const theme = useTheme();
@@ -38,6 +39,7 @@ const Dashboard = () => {
   const [stockUpdateDialog, setStockUpdateDialog] = useState(false);
   const [newStockValue, setNewStockValue] = useState('');
   const [billDialog, setBillDialog] = useState(false);
+  const [multipleBillDialog, setMultipleBillDialog] = useState(false);
   const [saleQuantity, setSaleQuantity] = useState('');
   const [vendorName, setVendorName] = useState(''); 
   const [paymentType, setPaymentType] = useState('paid');
@@ -266,6 +268,7 @@ const Dashboard = () => {
           setSearchTerm={setSearchTerm}
           category={category}
           setCategory={setCategory}
+          setMultipleBillDialog={setMultipleBillDialog}
         />
 
         {/* Inventory Table */}
@@ -304,6 +307,12 @@ const Dashboard = () => {
           setBillDialog={setBillDialog}
           setSelectedProduct={setSelectedProduct}
           setSaleQuantity={setSaleQuantity}
+          handleGenerateBill={handleGenerateBill}
+        />
+
+        <MultipleBillDialog
+          billDialog={multipleBillDialog}
+          setBillDialog={setMultipleBillDialog}
           handleGenerateBill={handleGenerateBill}
         />
 
