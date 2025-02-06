@@ -35,6 +35,7 @@ import AdvancedReports from './AdvancedReports';
 import BillDetails from './BillDetails'; 
 import Recommendation from './Recommendation';
 import CustomerAnalysis from './CustomerAnalysis';
+import SupplierAnalysis from './SupplierAnalysis'; // Import SupplierAnalysis
 
 const drawerWidth = 280;
 
@@ -139,23 +140,23 @@ const HomePage = () => {
               <ListItemText primary="User Management" primaryTypographyProps={{ fontWeight: currentPage === 'userManagement' ? 600 : 500 }} />
             </ListItem>
             <ListItem 
-          button 
-          selected={currentPage === 'billDetails'} // Add BillDetails option
-          onClick={() => handlePageChange('billDetails')}
-          sx={{ 
-            borderRadius: 2, 
-            mb: 1,
-            '&.Mui-selected': {
-              backgroundColor: alpha(theme.palette.primary.main, 0.1),
-              '&:hover': {
-                backgroundColor: alpha(theme.palette.primary.main, 0.15),
-              }
-            }
-          }}
-        >
-          <ListItemIcon><BarChart color={currentPage === 'billDetails' ? 'primary' : 'inherit'} /></ListItemIcon>
-          <ListItemText primary="Bill Details" primaryTypographyProps={{ fontWeight: currentPage === 'billDetails' ? 600 : 500 }} />
-        </ListItem>
+              button 
+              selected={currentPage === 'billDetails'} // Add BillDetails option
+              onClick={() => handlePageChange('billDetails')}
+              sx={{ 
+                borderRadius: 2, 
+                mb: 1,
+                '&.Mui-selected': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                  }
+                }
+              }}
+            >
+              <ListItemIcon><BarChart color={currentPage === 'billDetails' ? 'primary' : 'inherit'} /></ListItemIcon>
+              <ListItemText primary="Bill Details" primaryTypographyProps={{ fontWeight: currentPage === 'billDetails' ? 600 : 500 }} />
+            </ListItem>
             <ListItem 
               button
               selected={currentPage === 'advancedReports'}
@@ -209,6 +210,24 @@ const HomePage = () => {
             >
               <ListItemIcon><Analytics color={currentPage === 'customerAnalysis' ? 'primary' : 'inherit'} /></ListItemIcon>
               <ListItemText primary="Customer Analysis" primaryTypographyProps={{ fontWeight: currentPage === 'customerAnalysis' ? 600 : 500 }} />
+            </ListItem>
+            <ListItem 
+              button
+              selected={currentPage === 'supplierAnalysis'} // Add SupplierAnalysis option
+              onClick={() => handlePageChange('supplierAnalysis')}
+              sx={{ 
+                borderRadius: 2, 
+                mb: 1,
+                '&.Mui-selected': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                  }
+                }
+              }}
+            >
+              <ListItemIcon><Analytics color={currentPage === 'supplierAnalysis' ? 'primary' : 'inherit'} /></ListItemIcon>
+              <ListItemText primary="Supplier Analysis" primaryTypographyProps={{ fontWeight: currentPage === 'supplierAnalysis' ? 600 : 500 }} />
             </ListItem>
           </>
         ) : (
@@ -369,6 +388,7 @@ const HomePage = () => {
          currentPage === 'billDetails' ? <BillDetails /> :
          currentPage === 'recommendation' ? <Recommendation /> :
          currentPage === 'customerAnalysis' ? <CustomerAnalysis /> :
+         currentPage === 'supplierAnalysis' ? <SupplierAnalysis /> : // Add SupplierAnalysis component
          <ChartsPage />}
       </Box>
     </Box>

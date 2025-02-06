@@ -30,7 +30,7 @@ const productSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  expire_date: {
+  expiry_date: {
     type: Date,
     required: true,
   },

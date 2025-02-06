@@ -1,189 +1,280 @@
 /* eslint-disable no-unused-vars */
 
 import {
-    Box,
-    Button,
-    Container,
-    Grid,
-    Typography,
-    useTheme,
-    alpha,
-    Paper,
-    Stack,
-    IconButton,
-    Card,
-    Avatar,
-    Divider,
-    Tooltip,
-    Zoom,
-  } from "@mui/material"
-  import {
-    Inventory,
-    Timeline,
-    Notifications,
-    Security,
-    ArrowForward,
-    CloudDownload,
-    Speed,
-    Psychology,
-    Devices,
-    CheckCircle,
-    Star,
-    TrendingUp,
-    Lightbulb,
-    Rocket,
-    AutoGraph,
-    Shield,
-  } from "@mui/icons-material"
-  import { motion } from "framer-motion"
-  
-  const LandingPage = () => {
-    const theme = useTheme()
-  
-    const features = [
-      {
-        icon: <Rocket sx={{ fontSize: 48 }} />,
-        title: "Next-Gen Inventory Control",
-        description:
-          "Revolutionary AI-powered system with real-time tracking, predictive analytics, and autonomous stock optimization.",
-        color: "#7C3AED",
-        details: [
-          "Real-time inventory tracking across multiple locations",
-          "AI-driven demand forecasting and stock level optimization",
-          "Automated reordering and supplier management",
-          "Integration with IoT devices for physical inventory tracking",
-        ],
-      },
-      {
-        icon: <AutoGraph sx={{ fontSize: 48 }} />,
-        title: "Quantum Analytics Engine",
-        description:
-          "Harness the power of quantum computing and ML to transform raw data into strategic business intelligence.",
-        color: "#EC4899",
-        details: [
-          "Quantum-inspired algorithms for complex optimization problems",
-          "Machine learning models for pattern recognition and anomaly detection",
-          "Real-time data processing and visualization",
-          "Predictive analytics for market trends and business forecasting",
-        ],
-      },
-      {
-        icon: <Psychology sx={{ fontSize: 48 }} />,
-        title: "Cognitive Alert System",
-        description: "Self-learning notification engine that adapts to your workflow using advanced behavioral analysis.",
-        color: "#F59E0B",
-        details: [
-          "Personalized alert thresholds based on user behavior",
-          "Natural language processing for context-aware notifications",
-          "Integration with communication platforms (Slack, Email, SMS)",
-          "Automated escalation and task assignment",
-        ],
-      },
-      {
-        icon: <Shield sx={{ fontSize: 48 }} />,
-        title: "Fortress-Grade Security",
-        description: "Quantum-resistant encryption with multi-factor biometrics and distributed ledger verification.",
-        color: "#10B981",
-        details: [
-          "Post-quantum cryptography for data protection",
-          "Blockchain-based audit trails for all transactions",
-          "Multi-factor authentication with biometric options",
-          "Real-time threat detection and automated countermeasures",
-        ],
-      },
-    ]
-  
-    const testimonials = [
-      {
-        name: "Sarah Johnson",
-        role: "Chief Innovation Officer",
-        company: "TechVision Global",
-        avatar: "/avatars/sarah.jpg",
-        quote:
-          "This platform revolutionized our entire supply chain, delivering an astounding 85% improvement in operational efficiency.",
-        rating: 5,
-      },
-      {
-        name: "Michael Chen",
-        role: "VP of Operations",
-        company: "Nexus Logistics",
-        avatar: "/avatars/michael.jpg",
-        quote:
-          "A game-changing solution that slashed our costs by 65% and eliminated stockouts completely. Simply extraordinary.",
-        rating: 5,
-      },
-      {
-        name: "Emma Davis",
-        role: "Director of Digital Transformation",
-        company: "Future Systems",
-        avatar: "/avatars/emma.jpg",
-        quote:
-          "The perfect fusion of cutting-edge technology and intuitive design. Our ROI exceeded 300% in the first year.",
-        rating: 5,
-      },
-    ]
-  
-    const metrics = [
-      { label: "Enterprise Clients", value: "100,000+", icon: <Devices />, growth: "+312% YoY" },
-      { label: "Processing Speed", value: "0.0001ms", icon: <Speed />, growth: "99.999% uptime" },
-      { label: "AI Accuracy", value: "99.99%", icon: <Psychology />, growth: "+28% QoQ" },
-      { label: "Customer Success", value: "100%", icon: <CheckCircle />, growth: "World's Best" },
-    ]
-  
-    return (
-      <Box
-        sx={{
-          background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
-          color: "#F8FAFC",
-          overflow: "hidden",
-          position: "relative",
-          minHeight: "100vh",
-        }}
+  Box,
+  Button,
+  Container,
+  Grid,
+  Typography,
+  useTheme,
+  alpha,
+  Paper,
+  Stack,
+  IconButton,
+  Card,
+  Avatar,
+  Divider,
+  Tooltip,
+  Zoom,
+  Link,
+} from "@mui/material"
+import {
+  Inventory,
+  Timeline,
+  Notifications,
+  Security,
+  ArrowForward,
+  CloudDownload,
+  Speed,
+  Analytics,
+  DataObject,
+  CheckCircle,
+  Star,
+  TrendingUp,
+  Code,
+  Rocket,
+  AutoGraph,
+  Shield,
+  Cloud,
+  Storage,
+  Api,
+  BugReport,
+  Devices,
+  VerifiedUser,
+  Facebook,
+  Twitter,
+  LinkedIn,
+  GitHub,
+  Groups,
+} from "@mui/icons-material"
+import { motion, AnimatePresence } from "framer-motion"
+import dashImage from "../assets/dash.svg"
+import { useNavigate } from "react-router-dom"
+
+const LandingPage = () => {
+  const theme = useTheme()
+  const navigate = useNavigate()
+
+  const handleGetStarted = () => {
+    const isLoggedIn = localStorage.getItem("jwtToken")
+    if (isLoggedIn) {
+      navigate("/dashboard")
+    } else {
+      navigate("/login") 
+    }
+  }
+
+  const features = [
+    {
+      icon: <Inventory sx={{ fontSize: 48 }} />,
+      title: "Stock Management",
+      description: "Comprehensive inventory tracking and management system.",
+      color: "#2196F3",
+      details: [
+        "Real-time stock tracking",
+        "Low stock alerts",
+        "Automated reordering",
+        "Stock optimization",
+      ],
+      animation: {
+        hover: { scale: 1.05, rotate: 5 },
+        tap: { scale: 0.95 }
+      }
+    },
+    {
+      icon: <DataObject sx={{ fontSize: 48 }} />,
+      title: "Bill Generation",
+      description: "Fast and efficient billing system with customizable templates.",
+      color: "#64B5F6", 
+      details: [
+        "Professional invoice templates",
+        "Automated calculations",
+        "Digital receipt generation",
+        "Multiple payment methods",
+      ],
+      animation: {
+        hover: { scale: 1.05, y: -10 },
+        tap: { scale: 0.95 }
+      }
+    },
+    {
+      icon: <Analytics sx={{ fontSize: 48 }} />,
+      title: "Advanced Reports",
+      description: "Detailed business analytics and custom report generation.",
+      color: "#90CAF9",
+      details: [
+        "Sales analytics",
+        "Inventory reports",
+        "Financial statements",
+        "Custom report builder",
+      ],
+      animation: {
+        hover: { scale: 1.05, x: 10 },
+        tap: { scale: 0.95 }
+      }
+    },
+    {
+      icon: <Timeline sx={{ fontSize: 48 }} />,
+      title: "Chart Analysis",
+      description: "Visual data analysis with interactive charts and graphs.",
+      color: "#1976D2",
+      details: [
+        "Sales trends",
+        "Inventory movements",
+        "Revenue analysis",
+        "Growth projections",
+      ],
+      animation: {
+        hover: { scale: 1.05, rotate: -5 },
+        tap: { scale: 0.95 }
+      }
+    },
+    {
+      icon: <AutoGraph sx={{ fontSize: 48 }} />,
+      title: "Product Recommendations",
+      description: "AI-powered product suggestions and bundle recommendations.",
+      color: "#42A5F5",
+      details: [
+        "Smart product bundling",
+        "Cross-selling suggestions",
+        "Seasonal recommendations",
+        "Personalized offers",
+      ],
+      animation: {
+        hover: { scale: 1.05, y: 10 },
+        tap: { scale: 0.95 }
+      }
+    },
+    {
+      icon: <Groups sx={{ fontSize: 48 }} />,
+      title: "Customer Analysis",
+      description: "Deep insights into customer behavior and preferences.",
+      color: "#1E88E5",
+      details: [
+        "Customer segmentation",
+        "Purchase patterns",
+        "Loyalty tracking",
+        "Customer feedback analysis",
+      ],
+      animation: {
+        hover: { scale: 1.05, x: -10 },
+        tap: { scale: 0.95 }
+      }
+    },
+    {
+      icon: <Security sx={{ fontSize: 48 }} />,
+      title: "Fraud Detection",
+      description: "Advanced security measures to detect and prevent fraudulent activities.",
+      color: "#0D47A1",
+      details: [
+        "Real-time fraud detection",
+        "Suspicious activity alerts",
+        "Transaction verification",
+        "Security audit logs",
+      ],
+      animation: {
+        hover: { scale: 1.05, rotate: 10 },
+        tap: { scale: 0.95 }
+      }
+    },
+    {
+      icon: <VerifiedUser sx={{ fontSize: 48 }} />,
+      title: "Bill Analysis",
+      description: "Comprehensive bill tracking and analysis system.",
+      color: "#2962FF",
+      details: [
+        "Bill verification",
+        "Payment tracking",
+        "Expense analysis",
+        "Budget monitoring",
+      ],
+      animation: {
+        hover: { scale: 1.05, y: -5 },
+        tap: { scale: 0.95 }
+      }
+    }
+  ]
+
+  const metrics = [
+    { label: "Global Users", value: "2+", icon: <TrendingUp />, growth: "+127% YoY" },
+    { label: "Data Processed", value: "5GB+", icon: <Speed />, growth: "99.99% uptime" },
+    { label: "API Requests", value: "10K+", icon: <Code />, growth: "+85% MoM" },
+    { label: "Customer Rating", value: "4.9/5", icon: <Star />, growth: "Industry Best" },
+  ]
+
+  return (
+    <Box
+      sx={{
+        background: "linear-gradient(135deg, #E3F2FD 0%, #FFFFFF 100%)",
+        color: "#1A237E",
+        overflow: "hidden",
+        position: "relative",
+        minHeight: "100vh",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
       >
         <Box
           sx={{
             position: "absolute",
             width: "100%",
             height: "100%",
-            background: "radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.2) 0%, rgba(124, 58, 237, 0) 70%)",
+            background: "radial-gradient(circle at 50% 50%, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0) 70%)",
             pointerEvents: "none",
-            backdropFilter: "blur(120px)",
           }}
         />
-  
-        <Container maxWidth="lg">
-          <Grid container spacing={8} alignItems="center" sx={{ minHeight: "100vh", py: { xs: 12, md: 16 } }}>
-            <Grid item xs={12} md={6}>
-              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-                <Box
-                  sx={{
-                    display: "inline-block",
-                    background: "linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(236, 72, 153, 0.3))",
-                    borderRadius: 3,
-                    px: 3,
-                    py: 1.5,
-                    mb: 4,
-                    backdropFilter: "blur(15px)",
-                  }}
+      </motion.div>
+
+      <Container maxWidth="lg">
+        <Grid container spacing={8} alignItems="center" sx={{ minHeight: "100vh", py: { xs: 12, md: 16 } }}>
+          <Grid item xs={12} md={6}>
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            >
+              <Box
+                sx={{
+                  display: "inline-block",
+                  background: "linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(13, 71, 161, 0.1))",
+                  borderRadius: 3,
+                  px: 3,
+                  py: 1.5,
+                  mb: 4,
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <Typography
                     variant="subtitle2"
                     sx={{
-                      color: "#F8FAFC",
+                      color: "#1565C0",
                       fontWeight: 700,
                       letterSpacing: 3,
                     }}
                   >
-                    REVOLUTIONIZING ENTERPRISE LOGISTICS
+                    SMART INVENTORY MANAGEMENT
                   </Typography>
-                </Box>
-  
+                </motion.div>
+              </Box>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.8 }}
+              >
                 <Typography
                   variant="h1"
                   sx={{
                     fontWeight: 900,
                     fontSize: { xs: "3.5rem", md: "4.5rem" },
-                    background: "linear-gradient(135deg, #7C3AED, #EC4899)",
+                    background: "linear-gradient(135deg, #1565C0, #2196F3)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                     lineHeight: 1.1,
@@ -191,15 +282,21 @@ import {
                     letterSpacing: -1.5,
                   }}
                 >
-                  The Evolution of
+                  Optimize Stock.
                   <br />
-                  Smart Inventory
+                  Maximize Profit.
                 </Typography>
-  
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.8 }}
+              >
                 <Typography
                   variant="h5"
                   sx={{
-                    color: "#94A3B8",
+                    color: "#546E7A",
                     mb: 6,
                     lineHeight: 1.8,
                     fontWeight: 400,
@@ -207,17 +304,25 @@ import {
                     fontSize: "1.35rem",
                   }}
                 >
-                  Harness the power of quantum computing and artificial intelligence to transform your inventory
-                  management into a strategic advantage.
+                  Transform your inventory management with AI-powered analytics, real-time tracking, and intelligent demand forecasting.
                 </Typography>
-  
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems={{ xs: "stretch", sm: "center" }}>
+              </motion.div>
+
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems={{ xs: "stretch", sm: "center" }}>
+                <motion.div 
+                  whileHover={{ scale: 1.05 }} 
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6, duration: 0.8 }}
+                >
                   <Button
                     variant="contained"
                     size="large"
                     endIcon={<ArrowForward />}
+                    onClick={handleGetStarted}
                     sx={{
-                      background: "linear-gradient(135deg, #7C3AED, #EC4899)",
+                      background: "linear-gradient(135deg, #1565C0, #2196F3)",
                       color: "white",
                       px: 6,
                       py: 2.5,
@@ -225,353 +330,340 @@ import {
                       fontSize: "1.2rem",
                       fontWeight: 700,
                       textTransform: "none",
-                      boxShadow: "0 20px 40px rgba(124, 58, 237, 0.4)",
+                      boxShadow: "0 20px 40px rgba(33, 150, 243, 0.3)",
                       transition: "all 0.3s ease",
                       "&:hover": {
-                        transform: "translateY(-3px)",
-                        boxShadow: "0 30px 60px rgba(124, 58, 237, 0.5)",
+                        boxShadow: "0 30px 60px rgba(33, 150, 243, 0.4)",
                       },
                     }}
                   >
-                    Launch Your Future
+                    Start Managing
                   </Button>
-  
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    startIcon={<CloudDownload />}
-                    sx={{
-                      color: "#F8FAFC",
-                      borderColor: "rgba(248, 250, 252, 0.3)",
-                      borderWidth: 2,
-                      px: 6,
-                      py: 2.375,
-                      borderRadius: 3,
-                      fontSize: "1.2rem",
-                      fontWeight: 600,
-                      textTransform: "none",
-                      backdropFilter: "blur(15px)",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        borderColor: "#F8FAFC",
-                        background: "rgba(248, 250, 252, 0.15)",
-                        transform: "translateY(-3px)",
-                      },
-                    }}
-                  >
-                    Experience Demo
-                  </Button>
-                </Stack>
-              </motion.div>
-            </Grid>
-  
-            <Grid item xs={12} md={6}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8 }}
+                </motion.div>
+              </Stack>
+            </motion.div>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            >
+              <Box
+                sx={{
+                  position: "relative",
+                  "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: -20,
+                    left: -20,
+                    right: -20,
+                    bottom: -20,
+                    background: "radial-gradient(circle at 50% 50%, rgba(33, 150, 243, 0.2), transparent 70%)",
+                    filter: "blur(40px)",
+                    borderRadius: 8,
+                    zIndex: 0,
+                  },
+                }}
               >
-                <Box
-                  sx={{
-                    position: "relative",
-                    "&::before": {
-                      content: '""',
-                      position: "absolute",
-                      top: -20,
-                      left: -20,
-                      right: -20,
-                      bottom: -20,
-                      background: "radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.4), transparent 70%)",
-                      filter: "blur(40px)",
-                      borderRadius: 8,
-                      zIndex: 0,
-                    },
+                <motion.div
+                  animate={{ 
+                    y: [0, -20, 0],
+                    rotate: [0, 2, 0],
+                    scale: [1, 1.02, 1]
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
                   }}
                 >
                   <Box
                     component="img"
-                    src="/dashboard-preview.svg"
-                    alt="Advanced Dashboard"
+                    src={dashImage}
+                    alt="Platform Preview"
                     sx={{
                       width: "100%",
                       borderRadius: 8,
                       position: "relative",
                       zIndex: 1,
-                      boxShadow: "0 25px 80px rgba(124, 58, 237, 0.4)",
+                      boxShadow: "0 25px 80px rgba(33, 150, 243, 0.3)",
                       transition: "all 0.4s ease",
                       "&:hover": {
-                        transform: "translateY(-8px) scale(1.02)",
-                        boxShadow: "0 35px 100px rgba(124, 58, 237, 0.5)",
+                        transform: "scale(1.02)",
+                        boxShadow: "0 35px 100px rgba(33, 150, 243, 0.4)",
                       },
                     }}
                   />
-                </Box>
-              </motion.div>
-            </Grid>
+                </motion.div>
+              </Box>
+            </motion.div>
           </Grid>
-        </Container>
-  
-        {/* Metrics Section */}
-        <Container maxWidth="lg" sx={{ py: { xs: 10, md: 16 } }}>
-          <Grid container spacing={4} justifyContent="center">
-            {metrics.map((metric, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
+        </Grid>
+      </Container>
+
+      {/* Metrics Section */}
+      <Container maxWidth="lg" sx={{ py: { xs: 10, md: 16 } }}>
+        <Grid container spacing={4} justifyContent="center">
+          {metrics.map((metric, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -5 }}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 4,
+                    height: "100%",
+                    background: "rgba(255, 255, 255, 0.8)",
+                    borderRadius: 4,
+                    backdropFilter: "blur(20px)",
+                    border: "1px solid rgba(33, 150, 243, 0.1)",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      transform: "translateY(-5px)",
+                      boxShadow: "0 20px 40px rgba(33, 150, 243, 0.1)",
+                    },
+                  }}
                 >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 4,
-                      height: "100%",
-                      background: "rgba(30, 41, 59, 0.5)",
-                      borderRadius: 4,
-                      backdropFilter: "blur(20px)",
-                      border: "1px solid rgba(248, 250, 252, 0.1)",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        transform: "translateY(-5px)",
-                        boxShadow: "0 20px 40px rgba(124, 58, 237, 0.2)",
-                      },
-                    }}
-                  >
-                    <Stack spacing={3} alignItems="center" textAlign="center">
+                  <Stack spacing={3} alignItems="center" textAlign="center">
+                    <motion.div
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.5 }}
+                    >
                       <Box
                         sx={{
-                          color: "#7C3AED",
-                          background: "rgba(124, 58, 237, 0.2)",
+                          color: "#2196F3",
+                          background: "rgba(33, 150, 243, 0.1)",
                           p: 2,
                           borderRadius: 3,
                         }}
                       >
                         {metric.icon}
                       </Box>
-                      <Typography variant="h3" sx={{ fontWeight: 700, letterSpacing: -0.5, color: "#F8FAFC" }}>
-                        {metric.value}
+                    </motion.div>
+                    <Typography variant="h3" sx={{ fontWeight: 700, letterSpacing: -0.5, color: "#1565C0" }}>
+                      {metric.value}
+                    </Typography>
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ color: "#546E7A", mb: 1 }}>
+                        {metric.label}
                       </Typography>
-                      <Box>
-                        <Typography variant="subtitle1" sx={{ color: "#94A3B8", mb: 1 }}>
-                          {metric.label}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: "#7C3AED",
-                            background: "rgba(124, 58, 237, 0.2)",
-                            px: 2,
-                            py: 0.75,
-                            borderRadius: 20,
-                            fontWeight: 600,
-                          }}
-                        >
-                          {metric.growth}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </Paper>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-  
-        {/* Features Section */}
-        <Container maxWidth="lg" sx={{ py: { xs: 10, md: 16 } }}>
-          <Grid container spacing={4}>
-            {features.map((feature, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.2 }}
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "#2196F3",
+                          background: "rgba(33, 150, 243, 0.1)",
+                          px: 2,
+                          py: 0.75,
+                          borderRadius: 20,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {metric.growth}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              </motion.div>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+
+      {/* Features Section */}
+      <Container maxWidth="lg" sx={{ py: { xs: 10, md: 16 } }}>
+        <Grid container spacing={4}>
+          {features.map((feature, index) => (
+            <Grid item xs={12} sm={6} md={3} key={index}>
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.2 }}
+                whileHover={feature.animation.hover}
+                whileTap={feature.animation.tap}
+              >
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 4,
+                    height: "100%",
+                    background: "rgba(255, 255, 255, 0.8)",
+                    borderRadius: 4,
+                    backdropFilter: "blur(20px)",
+                    border: "1px solid rgba(33, 150, 243, 0.1)",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      transform: "translateY(-8px)",
+                      boxShadow: "0 20px 40px rgba(33, 150, 243, 0.1)",
+                    },
+                  }}
                 >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 4,
-                      height: "100%",
-                      background: "rgba(30, 41, 59, 0.5)",
-                      borderRadius: 4,
-                      backdropFilter: "blur(20px)",
-                      border: "1px solid rgba(248, 250, 252, 0.1)",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        transform: "translateY(-8px)",
-                        boxShadow: "0 20px 40px rgba(124, 58, 237, 0.2)",
-                      },
-                    }}
-                  >
-                    <Stack spacing={3}>
+                  <Stack spacing={3}>
+                    <motion.div
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.5 }}
+                    >
                       <IconButton
                         sx={{
                           color: feature.color,
-                          background: alpha(feature.color, 0.2),
+                          background: alpha(feature.color, 0.1),
                           width: "fit-content",
                           p: 2,
                           "&:hover": {
-                            background: alpha(feature.color, 0.3),
+                            background: alpha(feature.color, 0.2),
                           },
                         }}
                       >
                         {feature.icon}
                       </IconButton>
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          color: "#F8FAFC",
-                          fontWeight: 700,
-                          letterSpacing: -0.5,
-                        }}
-                      >
-                        {feature.title}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          color: "#94A3B8",
-                          lineHeight: 1.7,
-                        }}
-                      >
-                        {feature.description}
-                      </Typography>
-                      <Tooltip
-                        title={
-                          <Box>
-                            {feature.details.map((detail, i) => (
-                              <Typography key={i} variant="body2" sx={{ mb: 1 }}>
-                                • {detail}
-                              </Typography>
-                            ))}
-                          </Box>
-                        }
-                        placement="top"
-                        TransitionComponent={Zoom}
-                      >
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          sx={{
-                            color: feature.color,
-                            borderColor: alpha(feature.color, 0.5),
-                            "&:hover": {
-                              borderColor: feature.color,
-                              background: alpha(feature.color, 0.1),
-                            },
-                          }}
-                        >
-                          Learn More
-                        </Button>
-                      </Tooltip>
-                    </Stack>
-                  </Paper>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-  
-        {/* Testimonials Section */}
-        <Container maxWidth="lg" sx={{ py: { xs: 10, md: 16 } }}>
-          <Typography
-            variant="h2"
-            align="center"
-            sx={{
-              fontWeight: 800,
-              mb: 2,
-              background: "linear-gradient(135deg, #7C3AED, #EC4899)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              letterSpacing: -1,
-            }}
-          >
-            Trusted by Industry Leaders
-          </Typography>
-          <Typography
-            variant="h6"
-            align="center"
-            sx={{
-              color: "#94A3B8",
-              mb: 10,
-              maxWidth: 600,
-              mx: "auto",
-              lineHeight: 1.8,
-            }}
-          >
-            Join the ranks of visionary organizations revolutionizing their operations with our next-generation platform
-          </Typography>
-  
-          <Grid container spacing={4}>
-            {testimonials.map((testimonial, index) => (
-              <Grid item xs={12} md={4} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.2 }}
-                >
-                  <Card
-                    sx={{
-                      p: 4,
-                      height: "100%",
-                      background: "rgba(30, 41, 59, 0.5)",
-                      borderRadius: 4,
-                      backdropFilter: "blur(20px)",
-                      border: "1px solid rgba(248, 250, 252, 0.1)",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        transform: "translateY(-8px)",
-                        boxShadow: "0 20px 40px rgba(124, 58, 237, 0.2)",
-                      },
-                    }}
-                  >
-                    <Stack spacing={3}>
-                      <Box sx={{ display: "flex", gap: 0.5 }}>
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star key={i} sx={{ color: "#F59E0B" }} />
-                        ))}
-                      </Box>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          color: "#F8FAFC",
-                          fontStyle: "italic",
-                          lineHeight: 1.8,
-                          fontSize: "1.1rem",
-                        }}
-                      >
-                        &ldquo;{testimonial.quote}&rdquo;
-                      </Typography>
-                      <Divider sx={{ borderColor: "rgba(248, 250, 252, 0.1)" }} />
-                      <Stack direction="row" spacing={2} alignItems="center">
-                        <Avatar
-                          src={testimonial.avatar}
-                          sx={{
-                            width: 56,
-                            height: 56,
-                            border: "2px solid rgba(124, 58, 237, 0.3)",
-                          }}
-                        />
+                    </motion.div>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: "#1565C0",
+                        fontWeight: 700,
+                        letterSpacing: -0.5,
+                      }}
+                    >
+                      {feature.title}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: "#546E7A",
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      {feature.description}
+                    </Typography>
+                    <Tooltip
+                      title={
                         <Box>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: "#F8FAFC", mb: 0.5 }}>
-                            {testimonial.name}
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: "#94A3B8" }}>
-                            {testimonial.role} • {testimonial.company}
-                          </Typography>
+                          {feature.details.map((detail, i) => (
+                            <Typography key={i} variant="body2" sx={{ mb: 1 }}>
+                              • {detail}
+                            </Typography>
+                          ))}
                         </Box>
-                      </Stack>
-                    </Stack>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))}
+                      }
+                      placement="top"
+                      TransitionComponent={Zoom}
+                    >
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                          color: feature.color,
+                          borderColor: alpha(feature.color, 0.5),
+                          "&:hover": {
+                            borderColor: feature.color,
+                            background: alpha(feature.color, 0.1),
+                          },
+                        }}
+                      >
+                        Learn More
+                      </Button>
+                    </Tooltip>
+                  </Stack>
+                </Paper>
+              </motion.div>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+
+      {/* Footer */}
+      <Box
+        sx={{
+          background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(33,150,243,0.1) 100%)",
+          pt: 8,
+          pb: 4,
+        }}
+      >
+        <Container maxWidth="lg">
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6" sx={{ color: "#1565C0", fontWeight: 700, mb: 2 }}>
+                About Us
+              </Typography>
+              <Typography variant="body2" sx={{ color: "#546E7A", mb: 3 }}>
+                We&apos;re on a mission to revolutionize enterprise software development with cutting-edge cloud solutions.
+              </Typography>
+              <Stack direction="row" spacing={2}>
+                <IconButton color="primary" component={Link} href="https://facebook.com" target="_blank">
+                  <Facebook />
+                </IconButton>
+                <IconButton color="primary" component={Link} href="https://twitter.com" target="_blank">
+                  <Twitter />
+                </IconButton>
+                <IconButton color="primary" component={Link} href="https://linkedin.com" target="_blank">
+                  <LinkedIn />
+                </IconButton>
+                <IconButton color="primary" component={Link} href="https://github.com" target="_blank">
+                  <GitHub />
+                </IconButton>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Typography variant="h6" sx={{ color: "#1565C0", fontWeight: 700, mb: 2 }}>
+                Product
+              </Typography>
+              <Stack spacing={1}>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Features</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Pricing</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Documentation</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>API Reference</Link>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Typography variant="h6" sx={{ color: "#1565C0", fontWeight: 700, mb: 2 }}>
+                Company
+              </Typography>
+              <Stack spacing={1}>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>About</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Blog</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Careers</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Press</Link>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Typography variant="h6" sx={{ color: "#1565C0", fontWeight: 700, mb: 2 }}>
+                Support
+              </Typography>
+              <Stack spacing={1}>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Help Center</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Contact</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Status</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Security</Link>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <Typography variant="h6" sx={{ color: "#1565C0", fontWeight: 700, mb: 2 }}>
+                Legal
+              </Typography>
+              <Stack spacing={1}>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Privacy</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Terms</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Cookie Policy</Link>
+                <Link href="#" underline="hover" sx={{ color: "#546E7A" }}>Licenses</Link>
+              </Stack>
+            </Grid>
           </Grid>
+          <Divider sx={{ my: 4 }} />
+          <Typography variant="body2" align="center" sx={{ color: "#546E7A" }}>
+            © {new Date().getFullYear()} Your Company Name. All rights reserved.
+          </Typography>
         </Container>
       </Box>
-    )
-  }
-  
-  export default LandingPage
-  
-  
+    </Box>
+  )
+}
+
+export default LandingPage

@@ -33,7 +33,8 @@ import {
   Cancel as CancelIcon,
   GetApp as ExportIcon,
   Warning as WarningIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  Payment as PaymentIcon
 } from '@mui/icons-material';
 import { format, differenceInDays } from 'date-fns';
 import { saveAs } from 'file-saver';
@@ -252,6 +253,37 @@ const BillPage = () => {
       ...bill, 
       productName: product ? product.name : 'Unknown Product' 
     });
+  };
+
+  const handleMarkAsPaid = async (billNumber) => {
+    try {
+      const response = await fetch(`http://localhost:5017/api/bill/${billNumber}/payment-type`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ paymentType: 'paid' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update payment status');
+      }
+
+      // Update local state
+      setBills(bills.map(bill => 
+        bill.billNumber === billNumber 
+          ? { ...bill, paymentType: 'paid' }
+          : bill
+      ));
+
+      // Update selected bill if it's open
+      if (selectedBill && selectedBill.billNumber === billNumber) {
+        setSelectedBill(prev => ({...prev, paymentType: 'paid'}));
+      }
+
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+    }
   };
 
   const clearFilters = () => {
@@ -637,6 +669,26 @@ const BillPage = () => {
                                 <DownloadIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
+                            {isDue && (
+                              <Tooltip title="Mark as Paid">
+                                <IconButton 
+                                  size="small"
+                                  onClick={() => handleMarkAsPaid(bill.billNumber)}
+                                  sx={{ 
+                                    bgcolor: 'success.soft',
+                                    color: 'success.main',
+                                    borderRadius: '10px',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': { 
+                                      bgcolor: 'success.softHover',
+                                      transform: 'translateY(-2px)'
+                                    }
+                                  }}
+                                >
+                                  <PaymentIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
                           </Box>
                         </TableCell>
                       </TableRow>

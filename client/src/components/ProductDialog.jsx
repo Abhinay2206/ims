@@ -29,7 +29,9 @@ const ProductDialog = ({ open, onClose, product, onSave }) => {
     stock: '',
     lowStockThreshold: '', 
     price: '',
-    category: ''
+    category: '',
+    manufacturing_date: '',
+    expiry_date: '' // Changed from expire_date to expiry_date to match server model
   });
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -41,7 +43,9 @@ const ProductDialog = ({ open, onClose, product, onSave }) => {
         stock: product.stock || '',
         lowStockThreshold: product.lowStockThreshold || '',
         price: product.price || '',
-        category: product.category || ''
+        category: product.category || '',
+        manufacturing_date: product.manufacturing_date || '',
+        expiry_date: product.expiry_date || '' // Changed from expire_date to expiry_date
       });
     }
   }, [product]);
@@ -62,7 +66,10 @@ const ProductDialog = ({ open, onClose, product, onSave }) => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData)
+          body: JSON.stringify({
+            ...formData,
+            expiry_date: formData.expiry_date // Ensure expiry_date is sent correctly
+          })
         });
 
         if (response.ok) {
@@ -202,6 +209,32 @@ const ProductDialog = ({ open, onClose, product, onSave }) => {
               }}
             />
 
+            <TextField
+              name="manufacturing_date"
+              label="Manufacturing Date"
+              type="date"
+              value={formData.manufacturing_date}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+
+            <TextField
+              name="expiry_date"
+              label="Expiry Date"
+              type="date"
+              value={formData.expiry_date}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+
             <FormControl 
               fullWidth 
               required
@@ -221,8 +254,13 @@ const ProductDialog = ({ open, onClose, product, onSave }) => {
                 onChange={handleChange}
                 label="Category"
               >
-                <MenuItem value="Electronics">Electronics</MenuItem>
-                <MenuItem value="Accessories">Accessories</MenuItem>
+                <MenuItem value="Fruits">Fruits</MenuItem>
+                <MenuItem value="Vegetables">Vegetables</MenuItem>
+                <MenuItem value="Meat">Meat</MenuItem>
+                <MenuItem value="Dairy">Dairy</MenuItem>
+                <MenuItem value="Beverages">Beverages</MenuItem>
+                <MenuItem value="Grains">Grains</MenuItem>
+                <MenuItem value="Groceries">Groceries</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -254,7 +292,7 @@ const ProductDialog = ({ open, onClose, product, onSave }) => {
           <Button
             onClick={handleSubmit}
             variant="contained"
-            disabled={!formData.name || !formData.sku || !formData.stock || !formData.price || !formData.category}
+            disabled={!formData.name || !formData.sku || !formData.stock || !formData.price || !formData.category || !formData.expiry_date}
             sx={{
               borderRadius: 2,
               textTransform: 'none',

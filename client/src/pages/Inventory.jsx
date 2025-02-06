@@ -23,7 +23,9 @@ import {
   useTheme,
   alpha,
   LinearProgress,
-  Paper
+  Paper,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -33,7 +35,10 @@ import {
   Warning as WarningIcon,
   Refresh as RefreshIcon,
   NotificationsActive,
-  Download as DownloadIcon
+  Download as DownloadIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 import ProductDialog from '../components/ProductDialog';
 
@@ -50,6 +55,9 @@ const Inventory = () => {
   const itemsPerPage = 5;
   const userRole = localStorage.getItem('userRole');
   const isAdmin = userRole === 'admin';
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   useEffect(() => {
     fetchInventory();
@@ -115,12 +123,19 @@ const Inventory = () => {
         if (response.ok) {
           const updatedInventory = inventory.filter(item => item.sku !== product.sku);
           setInventory(updatedInventory);
+          setSnackbarMessage('Product deleted successfully!');
+          setSnackbarSeverity('success');
         } else {
           console.error('Failed to delete product');
+          setSnackbarMessage('Failed to delete product.');
+          setSnackbarSeverity('error');
         }
       } catch (error) {
         console.error('Error deleting product:', error);
+        setSnackbarMessage('Error deleting product.');
+        setSnackbarSeverity('error');
       }
+      setSnackbarOpen(true);
     }
   };
 
@@ -153,9 +168,13 @@ const Inventory = () => {
             } : item
           );
           setInventory(updatedInventory);
+          setSnackbarMessage('Product updated successfully!');
+          setSnackbarSeverity('success');
         }
       } catch (error) {
         console.error('Error updating product:', error);
+        setSnackbarMessage('Error updating product.');
+        setSnackbarSeverity('error');
       }
     } else {
       try {
@@ -176,12 +195,17 @@ const Inventory = () => {
             expiry_date: new Date(formData.expiry_date)
           };
           setInventory([...inventory, newProduct]);
+          setSnackbarMessage('Product added successfully!');
+          setSnackbarSeverity('success');
         }
       } catch (error) {
         console.error('Error adding product:', error);
+        setSnackbarMessage('Error adding product.');
+        setSnackbarSeverity('error');
       }
     }
     setOpenDialog(false);
+    setSnackbarOpen(true);
   };
 
   const downloadProductList = () => {
@@ -339,7 +363,7 @@ const Inventory = () => {
                   <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Stock Level</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Price</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Manufacturing Date</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Mfg Date</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Expiry Date</TableCell>
                   {isAdmin && <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>}
                 </TableRow>
@@ -488,6 +512,43 @@ const Inventory = () => {
           />
         )}
       </Paper>
+
+      <Snackbar 
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        sx={{
+          '& .MuiAlert-root': {
+            width: '100%',
+            alignItems: 'center'
+          }
+        }}
+      >
+        <Alert
+          elevation={6}
+          variant="filled"
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          icon={snackbarSeverity === 'success' ? <CheckCircleIcon /> : 
+                snackbarSeverity === 'error' ? <ErrorIcon /> : 
+                snackbarSeverity === 'info' ? <InfoIcon /> : 
+                <WarningIcon />}
+          sx={{
+            width: '100%',
+            borderRadius: 2,
+            '& .MuiAlert-icon': {
+              fontSize: 24
+            },
+            '& .MuiAlert-message': {
+              fontSize: '0.95rem',
+              fontWeight: 500
+            }
+          }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

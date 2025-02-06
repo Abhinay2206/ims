@@ -33,6 +33,7 @@ import {
   Inventory,
   Refresh
 } from '@mui/icons-material';
+import ProductRecommendationDialog from '../components/ProductRecommendationDialog';
 
 const Recommendation = () => {
   const theme = useTheme();
@@ -41,6 +42,8 @@ const Recommendation = () => {
   const [riskFilter, setRiskFilter] = useState('all');
   const [demandFilter, setDemandFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const fetchRecommendations = async () => {
     setLoading(true);
@@ -101,6 +104,11 @@ const Recommendation = () => {
     
     return matchesRisk && matchesDemand && matchesSearch;
   });
+
+  const handleCardClick = (product) => {
+    setSelectedProduct(product);
+    setDialogOpen(true);
+  };
 
   if (loading) {
     return (
@@ -190,12 +198,14 @@ const Recommendation = () => {
                   borderRadius: 2,
                   position: 'relative',
                   overflow: 'visible',
+                  cursor: 'pointer',
                   '&:hover': {
                     transform: 'translateY(-8px)',
                     transition: 'transform 0.3s ease-in-out',
                     boxShadow: theme.shadows[8]
                   }
                 }}
+                onClick={() => handleCardClick(rec)}
               >
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -280,6 +290,12 @@ const Recommendation = () => {
           </Grid>
         ))}
       </Grid>
+
+      <ProductRecommendationDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        product={selectedProduct}
+      />
     </Box>
   );
 };

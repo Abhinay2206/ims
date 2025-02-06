@@ -24,7 +24,8 @@ import {
   Divider,
   MenuItem,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  Alert
 } from '@mui/material';
 import { Close, Receipt, Print, ShoppingCart, Person, Payments } from '@mui/icons-material';
 
@@ -46,6 +47,7 @@ const BillGenerationDialog = ({
   const [discountReport, setDiscountReport] = useState(null);
   const [applyDiscount, setApplyDiscount] = useState(false);
   const [daysToExpiry, setDaysToExpiry] = useState(null);
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
     if (selectedProduct) {
@@ -60,9 +62,10 @@ const BillGenerationDialog = ({
       
       // Find discount suggestion for selected product
       const productDiscount = data.recommendations.find(item => item.sku === selectedProduct.sku);
-      if (productDiscount && productDiscount.status === "Active") {
+      if (productDiscount) {
         setDiscountReport(productDiscount);
         setDaysToExpiry(productDiscount.days_until_expiry);
+        setIsExpired(productDiscount.status === "EXPIRED - DO NOT SELL");
       }
     } catch (error) {
       console.error('Error fetching discount recommendations:', error);
@@ -78,7 +81,7 @@ const BillGenerationDialog = ({
   };
 
   const handleGenerateBillClick = () => {
-    if (!selectedProduct || !saleQuantity || !vendorName) {
+    if (!selectedProduct || !saleQuantity || !vendorName || isExpired) {
       return;
     }
 
@@ -253,6 +256,12 @@ const BillGenerationDialog = ({
 
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 2 }}>
+            {isExpired && (
+              <Alert severity="error">
+                This product has expired and cannot be sold.
+              </Alert>
+            )}
+
             <TextField
               label="Product"
               value={selectedProduct?.name || ''}
@@ -291,6 +300,7 @@ const BillGenerationDialog = ({
                 fullWidth
                 autoFocus
                 required
+                disabled={isExpired}
                 error={selectedProduct && parseInt(saleQuantity) > selectedProduct.stock}
                 helperText={selectedProduct && parseInt(saleQuantity) > selectedProduct.stock ? 
                   "Quantity exceeds available stock" : ""}
@@ -304,7 +314,7 @@ const BillGenerationDialog = ({
               />
             </Box>
 
-            {daysToExpiry !== null && discountReport && (
+            {daysToExpiry !== null && discountReport && !isExpired && (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Typography color={daysToExpiry < 3 ? "error.main" : "warning.main"}>
                   Days to Expiry: {daysToExpiry}
@@ -328,6 +338,7 @@ const BillGenerationDialog = ({
               onChange={(e) => setVendorName(e.target.value)}
               fullWidth
               required
+              disabled={isExpired}
               error={!vendorName}
               helperText={!vendorName ? "Vendor name is required" : ""}
               InputProps={{
@@ -343,6 +354,7 @@ const BillGenerationDialog = ({
               value={paymentType}
               onChange={(e) => setPaymentType(e.target.value)}
               fullWidth
+              disabled={isExpired}
               InputProps={{
                 startAdornment: (
                   <Payments sx={{ mr: 1, color: theme.palette.text.secondary }} />
@@ -394,7 +406,7 @@ const BillGenerationDialog = ({
           <Button 
             onClick={handleGenerateBillClick}
             variant="contained"
-            disabled={!saleQuantity || !vendorName ||
+            disabled={!saleQuantity || !vendorName || isExpired ||
               (selectedProduct && parseInt(saleQuantity) > selectedProduct.stock)}
             sx={{ 
               borderRadius: 2,

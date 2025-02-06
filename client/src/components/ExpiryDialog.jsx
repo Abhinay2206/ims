@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable no-undef */
 /* eslint-disable react/prop-types */
 import { useState, useEffect } from 'react';
@@ -20,7 +21,7 @@ import {
   Chip,
   alpha
 } from '@mui/material';
-import { Close, Warning } from '@mui/icons-material';
+import { Close, Warning, ErrorOutline, AccessTime } from '@mui/icons-material';
 
 const ExpiryDialog = ({ open, onClose }) => {
   const theme = useTheme();
@@ -56,30 +57,65 @@ const ExpiryDialog = ({ open, onClose }) => {
     }
   };
 
-  const renderProductTable = (products, title, chipColor) => (
-    <Box sx={{ mt: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Warning sx={{ color: chipColor }} />
+  const renderProductTable = (products, title, chipColor, icon) => (
+    <Box sx={{ 
+      mt: 3,
+      backgroundColor: alpha(chipColor, 0.03),
+      borderRadius: 3,
+      p: 3
+    }}>
+      <Typography 
+        variant="h6" 
+        sx={{ 
+          mb: 3, 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1,
+          color: chipColor,
+          fontWeight: 600
+        }}
+      >
+        {icon}
         {title}
+        <Chip
+          label={products.length}
+          size="small"
+          sx={{
+            ml: 1,
+            bgcolor: alpha(chipColor, 0.1),
+            color: chipColor,
+            fontWeight: 600
+          }}
+        />
       </Typography>
-      <TableContainer component={Paper} sx={{ maxHeight: 300 }}>
+      <TableContainer 
+        component={Paper} 
+        sx={{ 
+          maxHeight: 300,
+          boxShadow: 'none',
+          backgroundColor: 'transparent'
+        }}
+      >
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell>Product Name</TableCell>
-              <TableCell>SKU</TableCell>
-              <TableCell>Expiry Date</TableCell>
-              <TableCell>Stock</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell sx={{ fontWeight: 600, backgroundColor: alpha(theme.palette.common.white, 0.9) }}>Product Name</TableCell>
+              <TableCell sx={{ fontWeight: 600, backgroundColor: alpha(theme.palette.common.white, 0.9) }}>SKU</TableCell>
+              <TableCell sx={{ fontWeight: 600, backgroundColor: alpha(theme.palette.common.white, 0.9) }}>Expiry Date</TableCell>
+              <TableCell sx={{ fontWeight: 600, backgroundColor: alpha(theme.palette.common.white, 0.9) }}>Stock</TableCell>
+              <TableCell sx={{ fontWeight: 600, backgroundColor: alpha(theme.palette.common.white, 0.9) }}>Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {products.map((product) => (
-              <TableRow key={product._id}>
-                <TableCell>{product.name}</TableCell>
+              <TableRow 
+                key={product._id}
+                sx={{ '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.5) } }}
+              >
+                <TableCell sx={{ fontWeight: 500 }}>{product.name}</TableCell>
                 <TableCell>{product.sku}</TableCell>
                 <TableCell>{new Date(product.expiry_date).toLocaleDateString()}</TableCell>
-                <TableCell>{product.quantity}</TableCell>
+                <TableCell>{product.stock}</TableCell>
                 <TableCell>
                   <Chip 
                     label={title} 
@@ -87,7 +123,8 @@ const ExpiryDialog = ({ open, onClose }) => {
                     sx={{ 
                       bgcolor: alpha(chipColor, 0.1),
                       color: chipColor,
-                      fontWeight: 600
+                      fontWeight: 600,
+                      borderRadius: '6px'
                     }}
                   />
                 </TableCell>
@@ -107,24 +144,32 @@ const ExpiryDialog = ({ open, onClose }) => {
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 2,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+          borderRadius: 3,
+          boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
+          backgroundImage: 'linear-gradient(to bottom right, #ffffff, #f8f9fa)'
         }
       }}
     >
-      <DialogTitle>
+      <DialogTitle sx={{ px: 4, py: 3 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h5" fontWeight={600}>
+          <Typography variant="h5" fontWeight={700}>
             Product Expiry Status
           </Typography>
-          <IconButton onClick={onClose} size="small">
+          <IconButton 
+            onClick={onClose} 
+            size="small"
+            sx={{ 
+              bgcolor: alpha(theme.palette.grey[500], 0.1),
+              '&:hover': { bgcolor: alpha(theme.palette.grey[500], 0.2) }
+            }}
+          >
             <Close />
           </IconButton>
         </Stack>
       </DialogTitle>
-      <DialogContent>
-        {renderProductTable(expiredProducts, 'Expired', theme.palette.error.main)}
-        {renderProductTable(expiringProducts, 'Expiring Soon', theme.palette.warning.main)}
+      <DialogContent sx={{ px: 4, pb: 4 }}>
+        {renderProductTable(expiredProducts, 'Expired', theme.palette.error.main, <ErrorOutline />)}
+        {renderProductTable(expiringProducts, 'Expiring Soon', theme.palette.warning.main, <AccessTime />)}
       </DialogContent>
     </Dialog>
   );

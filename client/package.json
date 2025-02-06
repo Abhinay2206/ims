@@ -10,12 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@date-io/date-fns": "^3.2.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.3.0",
     "@mui/material": "^6.3.0",
     "@mui/styled-engine": "^6.3.0",
+    "@mui/x-date-pickers": "^7.25.0",
     "axios": "^1.7.9",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.0.5",
@@ -24,6 +27,7 @@
     "lucide-react": "^0.469.0",
     "node-cron": "^3.0.3",
     "react": "^18.3.1",
+    "react-csv": "^2.2.2",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.1.1",
     "recharts": "^2.15.0",

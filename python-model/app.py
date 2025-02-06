@@ -4,6 +4,7 @@ from pymongo import MongoClient
 from model import ComprehensiveRecommendationModel
 from customer import AdvancedCustomerAnalytics
 from discount import ExpiryManagementSystem
+from supplier import SupplierAnalysis
 import json
 from bson import ObjectId
 import pandas as pd
@@ -24,6 +25,7 @@ db = client['ims']
 bills_collection = db['bills']
 products_collection = db['products']
 market_demand_collection = db['market_demand']
+suppliers_collection = db['supplier']
 
 @app.route('/inventory-recommendations', methods=['GET'])
 def get_inventory_recommendations():
@@ -69,6 +71,42 @@ def get_product_recommendation(sku):
     else:
         return jsonify({"error": "Product not found"}), 404
 
+@app.route('/monthly-predictions/<sku>', methods=['GET'])
+def get_monthly_predictions(sku):
+    # Fetch data from MongoDB
+    bills_data = list(bills_collection.find())
+    products_data = list(products_collection.find())
+    market_demand_data = list(market_demand_collection.find())
+    
+    # Initialize recommendation model
+    recommender = ComprehensiveRecommendationModel(bills_data, products_data, market_demand_data)
+    
+    # Get recommendation for specific product
+    product_rec = recommender.get_product_recommendation(sku)
+    
+    if product_rec and 'monthly_predictions' in product_rec:
+        return jsonify(product_rec['monthly_predictions'])
+    else:
+        return jsonify({"error": "Monthly predictions not found"}), 404
+
+@app.route('/yearly-trend/<sku>', methods=['GET'])
+def get_yearly_trend(sku):
+    # Fetch data from MongoDB
+    bills_data = list(bills_collection.find())
+    products_data = list(products_collection.find())
+    market_demand_data = list(market_demand_collection.find())
+    
+    # Initialize recommendation model
+    recommender = ComprehensiveRecommendationModel(bills_data, products_data, market_demand_data)
+    
+    # Get recommendation for specific product
+    product_rec = recommender.get_product_recommendation(sku)
+    
+    if product_rec and 'yearly_trend' in product_rec:
+        return jsonify(product_rec['yearly_trend'])
+    else:
+        return jsonify({"error": "Yearly trend not found"}), 404
+
 @app.route('/customer-insights', methods=['GET'])
 def get_customer_insights():
     # Fetch bills data from MongoDB
@@ -103,20 +141,47 @@ def get_rfm_analysis():
     customer_analytics = AdvancedCustomerAnalytics(pd.DataFrame(bills_data))
     rfm = customer_analytics.perform_rfm_analysis()
     
-    return jsonify(rfm.to_dict())
+    return jsonify({
+        'rfm_score': rfm['rfm_score'].to_dict(),
+        'recency': rfm['recency'].to_dict(),
+        'frequency': rfm['frequency'].to_dict(),
+        'monetary': rfm['monetary'].to_dict(),
+        'value_segment': rfm['value_segment'].to_dict()
+    })
 
-@app.route('/purchase-patterns', methods=['GET'])
-def get_purchase_patterns():
+@app.route('/supplier-analysis', methods=['GET'])
+def get_supplier_analysis():
+    # Fetch supplier data from MongoDB
+    supplier_data = list(suppliers_collection.find())
+    
+    # Initialize supplier analytics
+    supplier_analytics = SupplierAnalysis()
+    analysis_results = supplier_analytics.analyze_suppliers(pd.DataFrame(supplier_data))
+    
+    return jsonify({
+        'supplier_metrics': analysis_results['supplier_metrics'].to_dict(),
+        'stock_rmse': float(analysis_results['stock_rmse']),
+        'performance_distribution': analysis_results['performance_distribution'].to_dict(),
+        'model_accuracy': float(analysis_results['model_accuracy'])
+    })
+
+@app.route('/churn-prediction', methods=['GET'])
+def get_churn_prediction():
     # Fetch bills data from MongoDB
     bills_data = list(bills_collection.find())
     
     # Initialize customer analytics
     customer_analytics = AdvancedCustomerAnalytics(pd.DataFrame(bills_data))
-    temporal_patterns, rules = customer_analytics.analyze_purchase_patterns()
+    churn_analysis = customer_analytics.predict_churn()
     
     return jsonify({
-        'temporal_patterns': temporal_patterns.to_dict(),
-        'association_rules': rules.to_dict()
+        'feature_importance': churn_analysis['feature_importance'].to_dict(),
+        'churn_probabilities': churn_analysis['churn_probabilities'].to_dict(),
+        'metrics': {
+            'auc_score': float(churn_analysis['auc_score']),
+            'precision': float(churn_analysis['precision']), 
+            'recall': float(churn_analysis['recall'])
+        }
     })
 
 @app.route('/discount-recommendations', methods=['GET'])

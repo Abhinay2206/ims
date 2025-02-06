@@ -9,131 +9,196 @@ import {
   Button,
   Card,
   CardContent,
-  CardActions,
-  CircularProgress,
   Alert,
   Snackbar,
   useTheme,
-  alpha
+  alpha,
+  Tabs,
+  Tab,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
-import AnalyticsIcon from '@mui/icons-material/Analytics';
 import AssessmentIcon from '@mui/icons-material/Assessment';
-import TableChartIcon from '@mui/icons-material/TableChart';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
 const AdvancedReports = () => {
   const theme = useTheme();
   const [products, setProducts] = useState([]);
+  const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [reportData, setReportData] = useState(null);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  const years = Array.from({length: 5}, (_, i) => new Date().getFullYear() - i);
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
 
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch('http://localhost:5017/api/product/');
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-      const data = await response.json();
-      setProducts(data.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setError(error.message);
-      setLoading(false);
-      showSnackbar('Failed to load products', 'error');
-    }
-  };
-
-  const showSnackbar = (message, severity = 'success') => {
-    setSnackbar({ open: true, message, severity });
+  const showSnackbar = (message, severity) => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    });
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar(prev => ({
+      ...prev,
+      open: false
+    }));
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedYear, selectedMonth, selectedTab]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      const [productsResponse, billsResponse] = await Promise.all([
+        fetch('http://localhost:5017/api/product/'),
+        fetch('http://localhost:5017/api/bill/')
+      ]);
+
+      if (!productsResponse.ok || !billsResponse.ok) {
+        throw new Error('Failed to fetch data');
+      }
+
+      const productsData = await productsResponse.json();
+      const billsData = await billsResponse.json();
+
+      const filteredBills = billsData.filter(bill => {
+        const billDate = new Date(bill.date);
+        if (selectedTab === 0) {
+          return billDate.getFullYear() === selectedYear && 
+                 billDate.getMonth() === selectedMonth;
+        } else {
+          return billDate.getFullYear() === selectedYear;
+        }
+      });
+
+      setProducts(productsData.data);
+      setBills(filteredBills);
+      
+      const report = selectedTab === 0 ? generateMonthlyReport(filteredBills, productsData.data) : generateYearlyReport(filteredBills, productsData.data);
+      setReportData(report);
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setError(error.message);
+      setLoading(false);
+      showSnackbar('Failed to load report data', 'error');
+    }
+  };
+
+  const generateMonthlyReport = (billsData, productsData) => {
+    const totalRevenue = billsData.reduce((sum, bill) => sum + bill.totalAmount, 0);
+    const totalSales = billsData.reduce((sum, bill) => 
+      sum + bill.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+    
+    const salesByProduct = {};
+    billsData.forEach(bill => {
+      bill.items.forEach(item => {
+        if (!salesByProduct[item.productId]) {
+          salesByProduct[item.productId] = {
+            quantity: 0,
+            revenue: 0
+          };
+        }
+        salesByProduct[item.productId].quantity += item.quantity;
+        salesByProduct[item.productId].revenue += item.price * item.quantity;
+      });
+    });
+
+    const productSalesData = Object.entries(salesByProduct).map(([productId, data]) => {
+      const product = productsData.find(p => p._id === productId);
+      return {
+        name: product ? product.name : 'Unknown',
+        quantity: data.quantity,
+        revenue: data.revenue
+      };
+    }).sort((a, b) => b.revenue - a.revenue);
+
+    return {
+      totalRevenue,
+      totalSales,
+      averageOrderValue: totalRevenue / billsData.length || 0,
+      topProducts: productSalesData.slice(0, 5),
+      totalOrders: billsData.length
+    };
+  };
+
+  const generateYearlyReport = (billsData, productsData) => {
+    const monthlyData = Array(12).fill(0).map(() => ({
+      revenue: 0,
+      sales: 0,
+      orders: 0
+    }));
+
+    billsData.forEach(bill => {
+      const month = new Date(bill.date).getMonth();
+      monthlyData[month].revenue += bill.totalAmount;
+      monthlyData[month].orders += 1;
+      monthlyData[month].sales += bill.items.reduce((sum, item) => sum + item.quantity, 0);
+    });
+
+    return {
+      totalRevenue: monthlyData.reduce((sum, data) => sum + data.revenue, 0),
+      totalSales: monthlyData.reduce((sum, data) => sum + data.sales, 0),
+      totalOrders: monthlyData.reduce((sum, data) => sum + data.orders, 0),
+      monthlyBreakdown: monthlyData.map((data, index) => ({
+        month: months[index],
+        ...data
+      }))
+    };
   };
 
   const downloadExcel = () => {
-    try {
-      const worksheet = XLSX.utils.json_to_sheet(products);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      saveAs(data, 'products_report.xlsx');
-      showSnackbar('Excel file downloaded successfully');
-    } catch (error) {
-      showSnackbar('Failed to download Excel file', 'error');
-    }
+    if (!reportData) return;
+    const ws = XLSX.utils.json_to_sheet([reportData]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Report");
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(data, `report_${selectedYear}_${selectedTab === 0 ? months[selectedMonth] : 'yearly'}.xlsx`);
   };
-  
-  const downloadCSV = () => {
-    try {
-      const headers = Object.keys(products[0]).join(',');
-      const csvContent = [headers].concat(products.map(row => Object.values(row).join(','))).join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      saveAs(blob, 'products_report.csv');
-      showSnackbar('CSV file downloaded successfully');
-    } catch (error) {
-      showSnackbar('Failed to download CSV file', 'error');
-    }
-  };
-  
+
   const downloadPDF = () => {
-    try {
-      const doc = new jsPDF();
-      const headers = Object.keys(products[0]);
-      const data = products.map(product => Object.values(product));
-      
-      doc.text('Products Report', 14, 15);
-      doc.autoTable({
-        head: [headers],
-        body: data,
-        startY: 20,
-      });
-      
-      doc.save('products_report.pdf');
-      showSnackbar('PDF file downloaded successfully');
-    } catch (error) {
-      showSnackbar('Failed to download PDF file', 'error');
-    }
+    if (!reportData) return;
+    const doc = new jsPDF();
+    doc.text(`${selectedTab === 0 ? 'Monthly' : 'Yearly'} Report - ${selectedYear}`, 20, 10);
+    doc.autoTable({
+      head: [['Metric', 'Value']],
+      body: Object.entries(reportData).map(([key, value]) => [key, JSON.stringify(value)])
+    });
+    doc.save(`report_${selectedYear}_${selectedTab === 0 ? months[selectedMonth] : 'yearly'}.pdf`);
   };
-
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="90vh" sx={{ background: alpha(theme.palette.primary.main, 0.03) }}>
-        <CircularProgress size={60} thickness={4} />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container maxWidth="lg" sx={{ mt: 8, mb: 4 }}>
-        <Alert severity="error" variant="filled" sx={{ mb: 2, borderRadius: 2 }}>
-          {error}
-        </Alert>
-      </Container>
-    );
-  }
-
-  if (products.length === 0) {
-    return (
-      <Container maxWidth="lg" sx={{ mt: 8, mb: 4 }}>
-        <Alert severity="info" variant="filled" sx={{ mb: 2, borderRadius: 2 }}>
-          No products available.
-        </Alert>
-      </Container>
-    );
-  }
 
   return (
     <Box sx={{ 
@@ -143,221 +208,131 @@ const AdvancedReports = () => {
       pb: 8
     }}>
       <Container maxWidth="lg">
-        
-        <Grid container spacing={4}>
-          <Grid item xs={12}>
-            <Paper 
-              sx={{ 
-                p: 4,
-                borderRadius: 4,
-                background: 'rgba(255,255,255,0.9)',
-                backdropFilter: 'blur(10px)'
-              }}
-            >
-              <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 4 }} color="primary">
-                Advanced Reports
-              </Typography>
-              
-              <Box sx={{ mb: 6 }}>
-                <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 400 }}>
-                  Generate and download comprehensive reports in various formats. Choose from Excel, CSV, or PDF formats.
-                </Typography>
-              </Box>
+        <Paper sx={{ p: 4, borderRadius: 4, mb: 4 }}>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 4 }} color="primary">
+            Audit Reports
+          </Typography>
 
-              <Grid container spacing={4}>
-                <Grid item xs={12} md={4}>
-                  <Card 
-                    sx={{ 
-                      height: '100%',
-                      transition: 'all 0.3s ease-in-out',
-                      borderRadius: 4,
-                      '&:hover': { 
-                        transform: 'translateY(-8px)',
-                        boxShadow: theme.shadows[5]
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ p: 4 }}>
-                      <Box sx={{ 
-                        mb: 3,
-                        background: alpha(theme.palette.primary.main, 0.1),
-                        borderRadius: '50%',
-                        width: 80,
-                        height: 80,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <TableChartIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                      </Box>
-                      <Typography variant="h5" component="div" sx={{ fontWeight: 600, mb: 2 }}>
-                        Excel Report
-                      </Typography>
-                      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                        Download detailed product data in Excel format with formatted tables and sheets
-                      </Typography>
-                    </CardContent>
-                    <CardActions sx={{ p: 4, pt: 0 }}>
-                      <Button 
-                        startIcon={<DownloadIcon />}
-                        onClick={downloadExcel}
-                        variant="contained"
-                        fullWidth
-                        size="large"
-                        sx={{ 
-                          borderRadius: 3,
-                          py: 1.5,
-                          textTransform: 'none',
-                          fontSize: '1.1rem'
-                        }}
-                      >
-                        Download Excel
-                      </Button>
-                    </CardActions>
-                  </Card>
-                </Grid>
+          <Tabs value={selectedTab} onChange={(e, newValue) => setSelectedTab(newValue)} sx={{ mb: 4 }}>
+            <Tab label="Monthly Audit" icon={<AssessmentIcon />} />
+            <Tab label="Yearly Audit" icon={<TrendingUpIcon />} />
+          </Tabs>
 
-                <Grid item xs={12} md={4}>
-                  <Card 
-                    sx={{ 
-                      height: '100%',
-                      transition: 'all 0.3s ease-in-out',
-                      borderRadius: 4,
-                      '&:hover': { 
-                        transform: 'translateY(-8px)',
-                        boxShadow: theme.shadows[5]
-                      }
-                    }}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Year</InputLabel>
+                <Select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  label="Year"
+                >
+                  {years.map(year => (
+                    <MenuItem key={year} value={year}>{year}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            {selectedTab === 0 && (
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Month</InputLabel>
+                  <Select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    label="Month"
                   >
-                    <CardContent sx={{ p: 4 }}>
-                      <Box sx={{ 
-                        mb: 3,
-                        background: alpha(theme.palette.primary.main, 0.1),
-                        borderRadius: '50%',
-                        width: 80,
-                        height: 80,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <AssessmentIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                      </Box>
-                      <Typography variant="h5" component="div" sx={{ fontWeight: 600, mb: 2 }}>
-                        CSV Report
-                      </Typography>
-                      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                        Export product data in CSV format for easy data manipulation
-                      </Typography>
-                    </CardContent>
-                    <CardActions sx={{ p: 4, pt: 0 }}>
-                      <Button 
-                        startIcon={<DownloadIcon />}
-                        onClick={downloadCSV}
-                        variant="contained"
-                        fullWidth
-                        size="large"
-                        sx={{ 
-                          borderRadius: 3,
-                          py: 1.5,
-                          textTransform: 'none',
-                          fontSize: '1.1rem'
-                        }}
-                      >
-                        Download CSV
-                      </Button>
-                    </CardActions>
-                  </Card>
-                </Grid>
+                    {months.map((month, index) => (
+                      <MenuItem key={month} value={index}>{month}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+          </Grid>
 
-                <Grid item xs={12} md={4}>
-                  <Card 
-                    sx={{ 
-                      height: '100%',
-                      transition: 'all 0.3s ease-in-out',
-                      borderRadius: 4,
-                      '&:hover': { 
-                        transform: 'translateY(-8px)',
-                        boxShadow: theme.shadows[5]
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ p: 4 }}>
-                      <Box sx={{ 
-                        mb: 3,
-                        background: alpha(theme.palette.primary.main, 0.1),
-                        borderRadius: '50%',
-                        width: 80,
-                        height: 80,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <AnalyticsIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                      </Box>
-                      <Typography variant="h5" component="div" sx={{ fontWeight: 600, mb: 2 }}>
-                        PDF Report
-                      </Typography>
-                      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                        Generate comprehensive PDF report with formatted tables and charts
-                      </Typography>
-                    </CardContent>
-                    <CardActions sx={{ p: 4, pt: 0 }}>
-                      <Button 
-                        startIcon={<DownloadIcon />}
-                        onClick={downloadPDF}
-                        variant="contained"
-                        fullWidth
-                        size="large"
-                        sx={{ 
-                          borderRadius: 3,
-                          py: 1.5,
-                          textTransform: 'none',
-                          fontSize: '1.1rem'
-                        }}
-                      >
-                        Download PDF
-                      </Button>
-                    </CardActions>
-                  </Card>
-                </Grid>
+          {loading ? (
+            <CircularProgress />
+          ) : error ? (
+            <Alert severity="error">{error}</Alert>
+          ) : reportData && (
+            <Grid container spacing={4}>
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      {selectedTab === 0 ? 'Monthly Report Summary' : 'Yearly Report Summary'}
+                    </Typography>
+                    {selectedTab === 0 ? (
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={4}>
+                          <Typography variant="subtitle2">Total Revenue</Typography>
+                          <Typography variant="h6">${reportData.totalRevenue.toFixed(2)}</Typography>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <Typography variant="subtitle2">Total Sales</Typography>
+                          <Typography variant="h6">{reportData.totalSales}</Typography>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <Typography variant="subtitle2">Average Order Value</Typography>
+                          <Typography variant="h6">${reportData.averageOrderValue.toFixed(2)}</Typography>
+                        </Grid>
+                      </Grid>
+                    ) : (
+                      <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={reportData.monthlyBreakdown}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="month" />
+                              <YAxis />
+                              <RechartsTooltip />
+                              <Legend />
+                              <Bar dataKey="revenue" fill="#8884d8" name="Revenue" />
+                              <Bar dataKey="sales" fill="#82ca9d" name="Sales" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </Grid>
+                      </Grid>
+                    )}
+                  </CardContent>
+                </Card>
               </Grid>
 
-              <Box sx={{ mt: 8 }}>
-                <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 4 }}>
-                  Data Preview
-                </Typography>
-                <Paper 
-                  sx={{ 
-                    overflow: 'auto',
-                    maxHeight: 400,
-                    p: 4,
-                    borderRadius: 4,
-                    background: alpha(theme.palette.background.paper, 0.8),
-                    backdropFilter: 'blur(10px)'
-                  }}
-                >
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
-                      <Box sx={{ 
-                        p: 3, 
-                        borderRadius: 3,
-                        background: alpha(theme.palette.primary.main, 0.1),
-                        textAlign: 'center'
-                      }}>
-                        <Typography variant="h2" color="primary" gutterBottom sx={{ fontWeight: 700 }}>
-                          {products.length}
-                        </Typography>
-                        <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 500 }}>
-                          Total Products
-                        </Typography>
-                      </Box>
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Download Report
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          startIcon={<DownloadIcon />}
+                          onClick={downloadExcel}
+                        >
+                          Excel Report
+                        </Button>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          startIcon={<DownloadIcon />}
+                          onClick={downloadPDF}
+                        >
+                          PDF Report
+                        </Button>
+                      </Grid>
                     </Grid>
-                  </Grid>
-                </Paper>
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          )}
+        </Paper>
 
         <Snackbar
           open={snackbar.open}
@@ -369,10 +344,7 @@ const AdvancedReports = () => {
             onClose={handleCloseSnackbar} 
             severity={snackbar.severity} 
             variant="filled"
-            sx={{ 
-              borderRadius: 2,
-              boxShadow: theme.shadows[10]
-            }}
+            sx={{ borderRadius: 2, boxShadow: theme.shadows[10] }}
           >
             {snackbar.message}
           </Alert>

@@ -6,11 +6,12 @@ import {
   Box, 
   Typography, 
   Button, 
-  IconButton, 
+  IconButton,
+  Fab, 
   useTheme, 
   alpha 
 } from '@mui/material';
-import { Warning } from '@mui/icons-material';
+import { Warning, SmartToy } from '@mui/icons-material';
 
 // Import all components
 import DashboardStatsCards from '../components/DashboardStatsCard';
@@ -20,6 +21,7 @@ import StockUpdateDialog from '../components/StockUpdateDialog';
 import BillGenerationDialog from '../components/BillGenerationDialog';
 import LowStockAlertsDialog from '../components/LowStockAlerts';
 import ExpiryDialog from '../components/ExpiryDialog';
+import ChatbotDialog from '../components/ChatBotDialog';
 
 const Dashboard = () => {
   const theme = useTheme();
@@ -41,6 +43,7 @@ const Dashboard = () => {
   const [paymentType, setPaymentType] = useState('paid');
   const [alertsDialog, setAlertsDialog] = useState(false);
   const [expiryDialog, setExpiryDialog] = useState(false);
+  const [chatbotOpen, setChatbotOpen] = useState(false);
   const [billNumber, setBillNumber] = useState(`BILL-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
 
   const itemsPerPage = 5;
@@ -316,6 +319,25 @@ const Dashboard = () => {
           open={expiryDialog}
           onClose={() => setExpiryDialog(false)}
         />
+
+        <ChatbotDialog 
+          open={chatbotOpen}
+          onClose={() => setChatbotOpen(false)}
+        />
+
+        {/* Chatbot FAB */}
+        <Fab
+          color="primary"
+          aria-label="chat"
+          onClick={() => setChatbotOpen(true)}
+          sx={{
+            position: 'fixed',
+            bottom: 20,
+            right: 20
+          }}
+        >
+          <SmartToy />
+        </Fab>
       </Stack>
     </Container>
   );
