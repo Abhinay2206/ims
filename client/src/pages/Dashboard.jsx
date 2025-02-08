@@ -1,19 +1,17 @@
 /* eslint-disable no-unused-vars */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Container, 
   Stack, 
   Box, 
   Typography, 
-  Button, 
-  IconButton,
-  Fab, 
+  Button,
+  Fab,
   useTheme, 
   alpha 
 } from '@mui/material';
 import { Warning, SmartToy } from '@mui/icons-material';
 
-// Import all components
 import DashboardStatsCards from '../components/DashboardStatsCard';
 import InventorySearchFilter from '../components/InventorySearchFilter';
 import InventoryTable from '../components/InventoryTable';
@@ -27,11 +25,6 @@ import MultipleBillDialog from '../components/MultipleBillDialog';
 const Dashboard = () => {
   const theme = useTheme();
   const [inventory, setInventory] = useState([]);
-  const [filteredInventory, setFilteredInventory] = useState([]);
-  const [lowStockItems, setLowStockItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [totalValue, setTotalValue] = useState(0);
-  const [stockTrend, setStockTrend] = useState(5.2);
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('all');
   const [tablePage, setTablePage] = useState(0);
@@ -41,19 +34,46 @@ const Dashboard = () => {
   const [billDialog, setBillDialog] = useState(false);
   const [multipleBillDialog, setMultipleBillDialog] = useState(false);
   const [saleQuantity, setSaleQuantity] = useState('');
-  const [vendorName, setVendorName] = useState(''); 
+  const [vendorName, setVendorName] = useState('');
   const [paymentType, setPaymentType] = useState('paid');
   const [alertsDialog, setAlertsDialog] = useState(false);
   const [expiryDialog, setExpiryDialog] = useState(false);
   const [chatbotOpen, setChatbotOpen] = useState(false);
-  const [billNumber, setBillNumber] = useState(`BILL-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
 
   const itemsPerPage = 5;
+
+  // Memoized derived states
+  const lowStockItems = useMemo(() => 
+    inventory.filter(item => item.stock < item.lowStockThreshold),
+    [inventory]
+  );
+
+  const totalValue = useMemo(() => 
+    inventory.reduce((acc, item) => acc + (item.stock * item.price), 0),
+    [inventory]
+  );
+
+  const filteredInventory = useMemo(() => 
+    inventory.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          item.sku.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = category === 'all' || item.category === category;
+      return matchesSearch && matchesCategory;
+    }),
+    [inventory, searchTerm, category]
+  );
+
+  const paginatedInventory = useMemo(() => 
+    filteredInventory.slice(
+      tablePage * itemsPerPage,
+      (tablePage + 1) * itemsPerPage
+    ),
+    [filteredInventory, tablePage]
+  );
 
   // Fetch Inventory
   useEffect(() => {
     const fetchInventory = async () => {
-      setIsLoading(true);
       try {
         const response = await fetch('http://localhost:5017/api/product/');
         const result = await response.json();
@@ -62,7 +82,7 @@ const Dashboard = () => {
           const products = result.data.map(product => ({
             id: product._id,
             name: product.name,
-            sku: product.sku, 
+            sku: product.sku,
             stock: product.stock,
             lowStockThreshold: product.lowStockThreshold,
             price: product.price,
@@ -70,36 +90,14 @@ const Dashboard = () => {
           }));
           
           setInventory(products);
-          setFilteredInventory(products);
-          setLowStockItems(products.filter(item => item.stock < item.lowStockThreshold));
-          setTotalValue(products.reduce((acc, item) => acc + (item.stock * item.price), 0));
-        } else {
-          console.error('Error fetching inventory:', result.message);
         }
       } catch (error) {
         console.error('Error fetching inventory:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
     fetchInventory();
   }, []);
-
-  // Filter Inventory
-  useEffect(() => {
-    const filtered = inventory.filter(item => {
-      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.sku.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = category === 'all' || item.category === category;
-      return matchesSearch && matchesCategory;
-    });
-    setFilteredInventory(filtered);
-    setTablePage(0);
-  }, [searchTerm, category, inventory]);
-
-  // Utility Functions
-  const getStockPercentage = (stock, threshold) => (stock / threshold) * 100;
 
   const handleTableNextPage = () => {
     const totalTablePages = Math.ceil(filteredInventory.length / itemsPerPage);
@@ -114,26 +112,20 @@ const Dashboard = () => {
     }
   };
 
-  // Stock Update Handler
   const handleUpdateStock = async () => {
     if (!selectedProduct || !newStockValue) return;
 
     try {
       const response = await fetch(`http://localhost:5017/api/product/update/${selectedProduct.sku}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          stock: parseInt(newStockValue)
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stock: parseInt(newStockValue) })
       });
 
       if (response.ok) {
-        const updatedInventory = inventory.map(item => 
+        setInventory(prev => prev.map(item => 
           item.sku === selectedProduct.sku ? {...item, stock: parseInt(newStockValue)} : item
-        );
-        setInventory(updatedInventory);
+        ));
         setStockUpdateDialog(false);
         setSelectedProduct(null);
         setNewStockValue('');
@@ -143,46 +135,39 @@ const Dashboard = () => {
     }
   };
 
-  // Bill Generation Handler
   const handleGenerateBill = async () => {
     if (!selectedProduct || !saleQuantity || !vendorName || !paymentType) return;
 
     try {
-      const billResponse = await fetch('http://localhost:5017/api/bill/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          billNumber: `BILL-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          productSku: selectedProduct.sku,
-          quantity: parseInt(saleQuantity),
-          totalAmount: selectedProduct.price * parseInt(saleQuantity),
-          vendorName: vendorName,
-          paymentType: paymentType
+      const billNumber = `BILL-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const [billResponse, stockResponse] = await Promise.all([
+        fetch('http://localhost:5017/api/bill/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            billNumber,
+            productSku: selectedProduct.sku,
+            quantity: parseInt(saleQuantity),
+            totalAmount: selectedProduct.price * parseInt(saleQuantity),
+            vendorName,
+            paymentType
+          })
+        }),
+        fetch(`http://localhost:5017/api/product/update/${selectedProduct.sku}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            stock: selectedProduct.stock - parseInt(saleQuantity)
+          })
         })
-      });
+      ]);
 
-      if (!billResponse.ok) {
-        throw new Error('Failed to generate bill');
-      }
-
-      const newStock = selectedProduct.stock - parseInt(saleQuantity);
-      const stockResponse = await fetch(`http://localhost:5017/api/product/update/${selectedProduct.sku}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          stock: newStock
-        })
-      });
-
-      if (stockResponse.ok) {
-        const updatedInventory = inventory.map(item => 
-          item.sku === selectedProduct.sku ? {...item, stock: newStock} : item
-        );
-        setInventory(updatedInventory);
+      if (billResponse.ok && stockResponse.ok) {
+        setInventory(prev => prev.map(item => 
+          item.sku === selectedProduct.sku 
+            ? {...item, stock: item.stock - parseInt(saleQuantity)} 
+            : item
+        ));
         setBillDialog(false);
         setSelectedProduct(null);
         setSaleQuantity('');
@@ -194,16 +179,9 @@ const Dashboard = () => {
     }
   };
 
-  // Paginated Inventory
-  const paginatedInventory = filteredInventory.slice(
-    tablePage * itemsPerPage,
-    (tablePage + 1) * itemsPerPage
-  );
-
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Stack spacing={3}>
-        {/* Header Section */}
         <Box sx={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -254,15 +232,13 @@ const Dashboard = () => {
           </Stack>
         </Box>
 
-        {/* Stats Cards */}
         <DashboardStatsCards 
-          inventory={inventory} 
+          inventory={inventory}
           lowStockItems={lowStockItems}
           totalValue={totalValue}
-          stockTrend={stockTrend}
+          stockTrend={5.2}
         />
 
-        {/* Search and Filter Section */}
         <InventorySearchFilter 
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -271,7 +247,6 @@ const Dashboard = () => {
           setMultipleBillDialog={setMultipleBillDialog}
         />
 
-        {/* Inventory Table */}
         <InventoryTable 
           paginatedInventory={paginatedInventory}
           tablePage={tablePage}
@@ -281,11 +256,9 @@ const Dashboard = () => {
           setSelectedProduct={setSelectedProduct}
           setStockUpdateDialog={setStockUpdateDialog}
           setBillDialog={setBillDialog}
-          setBillNumber={setBillNumber}
-          getStockPercentage={getStockPercentage}
+          getStockPercentage={(stock, threshold) => (stock / threshold) * 100}
         />
 
-        {/* Dialogs */}
         <StockUpdateDialog 
           stockUpdateDialog={stockUpdateDialog}
           selectedProduct={selectedProduct}
@@ -300,10 +273,10 @@ const Dashboard = () => {
           billDialog={billDialog}
           selectedProduct={selectedProduct}
           saleQuantity={saleQuantity}
-          vendorName={vendorName} 
+          vendorName={vendorName}
           setVendorName={setVendorName}
-          paymentType={paymentType} 
-          setPaymentType={setPaymentType} 
+          paymentType={paymentType}
+          setPaymentType={setPaymentType}
           setBillDialog={setBillDialog}
           setSelectedProduct={setSelectedProduct}
           setSaleQuantity={setSaleQuantity}
@@ -334,7 +307,6 @@ const Dashboard = () => {
           onClose={() => setChatbotOpen(false)}
         />
 
-        {/* Chatbot FAB */}
         <Fab
           color="primary"
           aria-label="chat"

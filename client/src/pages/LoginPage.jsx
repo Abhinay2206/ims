@@ -13,10 +13,12 @@ import {
   Box,
   useTheme,
   useMediaQuery,
-  Stack
+  Stack,
+  IconButton
 } from '@mui/material';
 import axios from 'axios';
 import InventoryIcon from '@mui/icons-material/Inventory';
+import HomeIcon from '@mui/icons-material/Home';
 
 const LoginPage = () => {
   const [loginType, setLoginType] = useState('');
@@ -29,7 +31,6 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        console.log(email, password, loginType)
       const response = await axios.post('http://localhost:5017/api/auth/login', {
         email,
         password,
@@ -39,7 +40,11 @@ const LoginPage = () => {
       localStorage.setItem('jwtToken', response.data.token);
       localStorage.setItem('email', response.data.email);
       localStorage.setItem('userRole', loginType);
-      navigate('/dashboard')
+      if (loginType === 'admin') {
+        navigate('/manager/dashboard');
+      } else {
+        navigate('/user/dashboard');
+      }
     } catch (error) {
       console.error('Login failed:', error.response ? error.response.data : error.message);
     }
@@ -54,6 +59,17 @@ const LoginPage = () => {
       justifyContent: 'center',
       py: 4
     }}>
+      <IconButton 
+        onClick={() => navigate('/')}
+        sx={{ 
+          position: 'absolute',
+          top: 20,
+          left: 20,
+          color: theme.palette.primary.main
+        }}
+      >
+        <HomeIcon sx={{ fontSize: 32 }} />
+      </IconButton>
       <Paper
         elevation={3}
         sx={{

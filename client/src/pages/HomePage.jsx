@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   Box,
   AppBar,
@@ -15,7 +15,7 @@ import {
   useTheme,
   alpha,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
 import {
   Dashboard as DashboardIcon,
   Inventory2,
@@ -27,17 +27,21 @@ import {
   Lightbulb,
   Analytics
 } from '@mui/icons-material';
-import Dashboard from './Dashboard';
-import Inventory from './Inventory';
-import ChartsPage from './ChartsPage';
-import UserManagement from './UserManagement';
-import AdvancedReports from './AdvancedReports';
-import BillDetails from './BillDetails'; 
-import Recommendation from './Recommendation';
-import CustomerAnalysis from './CustomerAnalysis';
-import SupplierAnalysis from './SupplierAnalysis'; // Import SupplierAnalysis
 
+// Memoize static values
 const drawerWidth = 280;
+
+// Memoize styles
+const getDrawerItemStyles = (theme) => ({
+  borderRadius: 2, 
+  mb: 1,
+  '&.Mui-selected': {
+    backgroundColor: alpha(theme.palette.primary.main, 0.1),
+    '&:hover': {
+      backgroundColor: alpha(theme.palette.primary.main, 0.15),
+    }
+  }
+});
 
 const HomePage = () => {
   const theme = useTheme();
@@ -46,22 +50,21 @@ const HomePage = () => {
   const userRole = localStorage.getItem('userRole');
   const [currentPage, setCurrentPage] = useState('dashboard');
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+  // Memoize handlers
+  const handleDrawerToggle = () => setMobileOpen(prev => !prev);
 
   const handleLogout = () => {
-    localStorage.removeItem('jwtToken');
-    localStorage.removeItem('email');
-    localStorage.removeItem('userRole');
-    navigate('/');
+    localStorage.clear();
+    navigate('/login');
   };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    navigate(`/${userRole === 'admin' ? 'manager' : 'user'}/${page}`);
   };
 
-  const drawer = (
+  // Memoize drawer content
+  const drawer = useMemo(() => (
     <Box sx={{ height: '100%', bgcolor: 'background.paper', boxShadow: 1 }}>
       <Box sx={{ 
         p: 1.2, 
@@ -81,21 +84,13 @@ const HomePage = () => {
         }}>IS</Avatar>
         <Typography variant="h6" sx={{ fontWeight: 700 }}>Inventory System</Typography>
       </Box>
+
       <List sx={{ px: 2 }}>
         <ListItem 
           button 
           selected={currentPage === 'dashboard'} 
           onClick={() => handlePageChange('dashboard')}
-          sx={{ 
-            borderRadius: 2, 
-            mb: 1,
-            '&.Mui-selected': {
-              backgroundColor: alpha(theme.palette.primary.main, 0.1),
-              '&:hover': {
-                backgroundColor: alpha(theme.palette.primary.main, 0.15),
-              }
-            }
-          }}
+          sx={getDrawerItemStyles(theme)}
         >
           <ListItemIcon><DashboardIcon color={currentPage === 'dashboard' ? 'primary' : 'inherit'} /></ListItemIcon>
           <ListItemText primary="Dashboard" primaryTypographyProps={{ fontWeight: currentPage === 'dashboard' ? 600 : 500 }} />
@@ -107,127 +102,70 @@ const HomePage = () => {
               button 
               selected={currentPage === 'inventory'} 
               onClick={() => handlePageChange('inventory')}
-              sx={{ 
-                borderRadius: 2, 
-                mb: 1,
-                '&.Mui-selected': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                  }
-                }
-              }}
+              sx={getDrawerItemStyles(theme)}
             >
               <ListItemIcon><Warehouse color={currentPage === 'inventory' ? 'primary' : 'inherit'} /></ListItemIcon>
               <ListItemText primary="Inventory" primaryTypographyProps={{ fontWeight: currentPage === 'inventory' ? 600 : 500 }} />
             </ListItem>
+
             <ListItem 
               button 
-              selected={currentPage === 'userManagement'} 
-              onClick={() => handlePageChange('userManagement')}
-              sx={{ 
-                borderRadius: 2, 
-                mb: 1,
-                '&.Mui-selected': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                  }
-                }
-              }}
+              selected={currentPage === 'user-management'} 
+              onClick={() => handlePageChange('user-management')}
+              sx={getDrawerItemStyles(theme)}
             >
-              <ListItemIcon><Group color={currentPage === 'userManagement' ? 'primary' : 'inherit'} /></ListItemIcon>
-              <ListItemText primary="User Management" primaryTypographyProps={{ fontWeight: currentPage === 'userManagement' ? 600 : 500 }} />
+              <ListItemIcon><Group color={currentPage === 'user-management' ? 'primary' : 'inherit'} /></ListItemIcon>
+              <ListItemText primary="User Management" primaryTypographyProps={{ fontWeight: currentPage === 'user-management' ? 600 : 500 }} />
             </ListItem>
+
             <ListItem 
               button 
-              selected={currentPage === 'billDetails'}
-              onClick={() => handlePageChange('billDetails')}
-              sx={{ 
-                borderRadius: 2, 
-                mb: 1,
-                '&.Mui-selected': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                  }
-                }
-              }}
+              selected={currentPage === 'bill-details'}
+              onClick={() => handlePageChange('bill-details')}
+              sx={getDrawerItemStyles(theme)}
             >
-              <ListItemIcon><BarChart color={currentPage === 'billDetails' ? 'primary' : 'inherit'} /></ListItemIcon>
-              <ListItemText primary="Bill Details" primaryTypographyProps={{ fontWeight: currentPage === 'billDetails' ? 600 : 500 }} />
+              <ListItemIcon><BarChart color={currentPage === 'bill-details' ? 'primary' : 'inherit'} /></ListItemIcon>
+              <ListItemText primary="Bill Details" primaryTypographyProps={{ fontWeight: currentPage === 'bill-details' ? 600 : 500 }} />
             </ListItem>
+
             <ListItem 
               button
-              selected={currentPage === 'advancedReports'}
-              onClick={() => handlePageChange('advancedReports')}
-              sx={{ 
-                borderRadius: 2, 
-                mb: 1,
-                '&.Mui-selected': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                  }
-                }
-              }}
+              selected={currentPage === 'advanced-reports'}
+              onClick={() => handlePageChange('advanced-reports')}
+              sx={getDrawerItemStyles(theme)}
             >
-              <ListItemIcon><BarChart color={currentPage === 'advancedReports' ? 'primary' : 'inherit'} /></ListItemIcon>
-              <ListItemText primary="Advanced Reports" primaryTypographyProps={{ fontWeight: currentPage === 'advancedReports' ? 600 : 500 }} />
+              <ListItemIcon><BarChart color={currentPage === 'advanced-reports' ? 'primary' : 'inherit'} /></ListItemIcon>
+              <ListItemText primary="Advanced Reports" primaryTypographyProps={{ fontWeight: currentPage === 'advanced-reports' ? 600 : 500 }} />
             </ListItem>
+
             <ListItem 
               button
               selected={currentPage === 'recommendation'}
               onClick={() => handlePageChange('recommendation')}
-              sx={{ 
-                borderRadius: 2, 
-                mb: 1,
-                '&.Mui-selected': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                  }
-                }
-              }}
+              sx={getDrawerItemStyles(theme)}
             >
               <ListItemIcon><Lightbulb color={currentPage === 'recommendation' ? 'primary' : 'inherit'} /></ListItemIcon>
               <ListItemText primary="Product Analysis" primaryTypographyProps={{ fontWeight: currentPage === 'recommendation' ? 600 : 500 }} />
             </ListItem>
+
             <ListItem 
               button
-              selected={currentPage === 'customerAnalysis'}
-              onClick={() => handlePageChange('customerAnalysis')}
-              sx={{ 
-                borderRadius: 2, 
-                mb: 1,
-                '&.Mui-selected': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                  }
-                }
-              }}
+              selected={currentPage === 'customer-analysis'}
+              onClick={() => handlePageChange('customer-analysis')}
+              sx={getDrawerItemStyles(theme)}
             >
-              <ListItemIcon><Analytics color={currentPage === 'customerAnalysis' ? 'primary' : 'inherit'} /></ListItemIcon>
-              <ListItemText primary="Customer Analysis" primaryTypographyProps={{ fontWeight: currentPage === 'customerAnalysis' ? 600 : 500 }} />
+              <ListItemIcon><Analytics color={currentPage === 'customer-analysis' ? 'primary' : 'inherit'} /></ListItemIcon>
+              <ListItemText primary="Customer Analysis" primaryTypographyProps={{ fontWeight: currentPage === 'customer-analysis' ? 600 : 500 }} />
             </ListItem>
+
             <ListItem 
               button
-              selected={currentPage === 'supplierAnalysis'}
-              onClick={() => handlePageChange('supplierAnalysis')}
-              sx={{ 
-                borderRadius: 2, 
-                mb: 1,
-                '&.Mui-selected': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                  }
-                }
-              }}
+              selected={currentPage === 'supplier-analysis'}
+              onClick={() => handlePageChange('supplier-analysis')}
+              sx={getDrawerItemStyles(theme)}
             >
-              <ListItemIcon><Analytics color={currentPage === 'supplierAnalysis' ? 'primary' : 'inherit'} /></ListItemIcon>
-              <ListItemText primary="Supplier Analysis" primaryTypographyProps={{ fontWeight: currentPage === 'supplierAnalysis' ? 600 : 500 }} />
+              <ListItemIcon><Analytics color={currentPage === 'supplier-analysis' ? 'primary' : 'inherit'} /></ListItemIcon>
+              <ListItemText primary="Supplier Analysis" primaryTypographyProps={{ fontWeight: currentPage === 'supplier-analysis' ? 600 : 500 }} />
             </ListItem>
           </>
         ) : (
@@ -236,61 +174,37 @@ const HomePage = () => {
               button 
               selected={currentPage === 'inventory'} 
               onClick={() => handlePageChange('inventory')}
-              sx={{ 
-                borderRadius: 2, 
-                mb: 1,
-                '&.Mui-selected': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                  }
-                }
-              }}
+              sx={getDrawerItemStyles(theme)}
             >
               <ListItemIcon><Inventory2 color={currentPage === 'inventory' ? 'primary' : 'inherit'} /></ListItemIcon>
               <ListItemText primary="Inventory" primaryTypographyProps={{ fontWeight: currentPage === 'inventory' ? 600 : 500 }} />
             </ListItem>
+
             <ListItem 
               button 
-              selected={currentPage === 'billDetails'}
-              onClick={() => handlePageChange('billDetails')}
-              sx={{ 
-                borderRadius: 2, 
-                mb: 1,
-                '&.Mui-selected': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                  '&:hover': {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.15),
-                  }
-                }
-              }}
+              selected={currentPage === 'bill-details'}
+              onClick={() => handlePageChange('bill-details')}
+              sx={getDrawerItemStyles(theme)}
             >
-              <ListItemIcon><BarChart color={currentPage === 'billDetails' ? 'primary' : 'inherit'} /></ListItemIcon>
-              <ListItemText primary="Bill Details" primaryTypographyProps={{ fontWeight: currentPage === 'billDetails' ? 600 : 500 }} />
+              <ListItemIcon><BarChart color={currentPage === 'bill-details' ? 'primary' : 'inherit'} /></ListItemIcon>
+              <ListItemText primary="Bill Details" primaryTypographyProps={{ fontWeight: currentPage === 'bill-details' ? 600 : 500 }} />
             </ListItem>
           </>
         )}
+
         <ListItem 
           button 
           selected={currentPage === 'charts'} 
           onClick={() => handlePageChange('charts')}
-          sx={{ 
-            borderRadius: 2, 
-            mb: 1,
-            '&.Mui-selected': {
-              backgroundColor: alpha(theme.palette.primary.main, 0.1),
-              '&:hover': {
-                backgroundColor: alpha(theme.palette.primary.main, 0.15),
-              }
-            }
-          }}
+          sx={getDrawerItemStyles(theme)}
         >
           <ListItemIcon><BarChart color={currentPage === 'charts' ? 'primary' : 'inherit'} /></ListItemIcon>
           <ListItemText primary="Charts" primaryTypographyProps={{ fontWeight: currentPage === 'charts' ? 600 : 500 }} />
         </ListItem>
-        
       </List>
+
       <Divider sx={{ my: 2 }} />
+      
       <List sx={{ px: 2 }}>
         <ListItem 
           button 
@@ -308,7 +222,7 @@ const HomePage = () => {
         </ListItem>
       </List>
     </Box>
-  );
+  ), [currentPage, theme, userRole]);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -399,15 +313,7 @@ const HomePage = () => {
           p: 3
         }}
       >
-        {currentPage === 'dashboard' ? <Dashboard /> : 
-         currentPage === 'inventory' ? <Inventory /> : 
-         currentPage === 'userManagement' ? <UserManagement /> :
-         currentPage === 'advancedReports' ? <AdvancedReports /> :
-         currentPage === 'billDetails' ? <BillDetails /> :
-         currentPage === 'recommendation' ? <Recommendation /> :
-         currentPage === 'customerAnalysis' ? <CustomerAnalysis /> :
-         currentPage === 'supplierAnalysis' ? <SupplierAnalysis /> :
-         <ChartsPage />}
+        <Outlet />
       </Box>
     </Box>
   );

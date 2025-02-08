@@ -54,11 +54,16 @@ import { useNavigate } from "react-router-dom"
 const LandingPage = () => {
   const theme = useTheme()
   const navigate = useNavigate()
+  const userRole = localStorage.getItem('userRole');
 
   const handleGetStarted = () => {
     const isLoggedIn = localStorage.getItem("jwtToken")
     if (isLoggedIn) {
-      navigate("/dashboard")
+      if (userRole === 'admin') {
+        navigate("/manager/dashboard")
+      } else {
+        navigate("/user/dashboard")
+      }
     } else {
       navigate("/login") 
     }
