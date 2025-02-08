@@ -14,42 +14,111 @@ import {
   useTheme,
   useMediaQuery,
   Stack,
-  IconButton
+  IconButton,
+  Alert,
+  Snackbar
 } from '@mui/material';
 import axios from 'axios';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import HomeIcon from '@mui/icons-material/Home';
+import Cookies from 'js-cookie';
 
 const LoginPage = () => {
   const [loginType, setLoginType] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [showError, setShowError] = useState(false);
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!email || !password || !loginType) {
+      setError('Please fill in all fields');
+      setShowError(true);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      setShowError(true);
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      setShowError(true);
+      return;
+    }
+
     try {
       const response = await axios.post('http://localhost:5017/api/auth/login', {
-        email,
+        email: email.toLowerCase().trim(),
         password,
         role: loginType,
       });
-      console.log('Login successful:', response.data);
-      localStorage.setItem('jwtToken', response.data.token);
-      localStorage.setItem('email', response.data.email);
-      localStorage.setItem('userRole', loginType);
+
+      const { token, email: userEmail } = response.data;
+
+      Cookies.set('jwtToken', token, { 
+        secure: true, 
+        sameSite: 'strict',
+        expires: 10/24
+      });
+      
+      Cookies.set('email', userEmail, { 
+        secure: true, 
+        sameSite: 'strict',
+        expires: 10/24
+      });
+      
+      Cookies.set('userRole', loginType, { 
+        secure: true, 
+        sameSite: 'strict',
+        expires: 10/24
+      });
+
       if (loginType === 'admin') {
         navigate('/manager/dashboard');
       } else {
         navigate('/user/dashboard');
       }
+
     } catch (error) {
-      console.error('Login failed:', error.response ? error.response.data : error.message);
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            errorMessage = 'Invalid input. Please check your credentials.';
+            break;
+          case 401:
+            errorMessage = 'Invalid email or password.';
+            break;
+          case 403:
+            errorMessage = 'You do not have permission to access this role.';
+            break;
+          case 429:
+            errorMessage = 'Too many login attempts. Please try again later.';
+            break;
+          default:
+            errorMessage = error.response.data?.error || errorMessage;
+        }
+      }
+      
+      setError(errorMessage);
+      setShowError(true);
+      console.error('Login error:', error);
     }
   };
 
+  const handleCloseError = () => {
+    setShowError(false);
+  };
 
   return (
     <Container maxWidth="lg" sx={{ 
@@ -120,7 +189,6 @@ const LoginPage = () => {
           </Box>
         </Box>
 
-        {/* Right Side - Login Form */}
         <Box
           sx={{
             flex: '1 1 50%',
@@ -142,6 +210,7 @@ const LoginPage = () => {
                 value={loginType}
                 label="Select Role"
                 onChange={(e) => setLoginType(e.target.value)}
+                required
               >
                 <MenuItem value="user">Inventory Staff</MenuItem>
                 <MenuItem value="admin">Inventory Manager</MenuItem>
@@ -159,6 +228,10 @@ const LoginPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               variant="outlined"
               sx={{ mb: 3 }}
+              inputProps={{
+                maxLength: 50,
+                pattern: "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$"
+              }}
             />
 
             <TextField
@@ -173,6 +246,10 @@ const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               variant="outlined"
               sx={{ mb: 4 }}
+              inputProps={{
+                minLength: 8,
+                maxLength: 50
+              }}
             />
 
             <Stack spacing={2}>
@@ -180,7 +257,7 @@ const LoginPage = () => {
                 type="submit"
                 fullWidth
                 variant="contained"
-                disabled={!loginType}
+                disabled={!loginType || !email || !password}
                 sx={{
                   py: 1.8,
                   borderRadius: '12px',
@@ -218,6 +295,18 @@ const LoginPage = () => {
           </Box>
         </Box>
       </Paper>
+
+      <Snackbar 
+        open={showError} 
+        autoHideDuration={6000} 
+        onClose={handleCloseError}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseError} severity="error" sx={{ width: '100%' }}>
+          {error}
+        </Alert>
+      </Snackbar>
+
     </Container>
   );
 };

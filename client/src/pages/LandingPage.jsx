@@ -50,14 +50,15 @@ import {
 import { motion, AnimatePresence } from "framer-motion"
 import dashImage from "../assets/dash.svg"
 import { useNavigate } from "react-router-dom"
+import Cookies from 'js-cookie';
 
 const LandingPage = () => {
   const theme = useTheme()
   const navigate = useNavigate()
-  const userRole = localStorage.getItem('userRole');
+  const userRole = Cookies.get('userRole');
 
   const handleGetStarted = () => {
-    const isLoggedIn = localStorage.getItem("jwtToken")
+    const isLoggedIn = Cookies.get("jwtToken")
     if (isLoggedIn) {
       if (userRole === 'admin') {
         navigate("/manager/dashboard")

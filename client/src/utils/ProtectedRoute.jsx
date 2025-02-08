@@ -1,9 +1,10 @@
 /* eslint-disable react/prop-types */
 import { Navigate, useLocation } from 'react-router-dom';
 import NotFoundPage from '../pages/NotFoundPage';
+import Cookies from 'js-cookie';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const userRole = localStorage.getItem('userRole');
+  const userRole = Cookies.get('userRole');
   const location = useLocation();
 
   // Check if path exists in defined routes

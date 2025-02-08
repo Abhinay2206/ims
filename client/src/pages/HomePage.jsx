@@ -27,6 +27,7 @@ import {
   Lightbulb,
   Analytics
 } from '@mui/icons-material';
+import Cookies from 'js-cookie';
 
 // Memoize static values
 const drawerWidth = 280;
@@ -47,14 +48,16 @@ const HomePage = () => {
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
-  const userRole = localStorage.getItem('userRole');
+  const userRole = Cookies.get('userRole');
   const [currentPage, setCurrentPage] = useState('dashboard');
 
   // Memoize handlers
   const handleDrawerToggle = () => setMobileOpen(prev => !prev);
 
   const handleLogout = () => {
-    localStorage.clear();
+    Cookies.remove('jwtToken');
+    Cookies.remove('email');
+    Cookies.remove('userRole');
     navigate('/login');
   };
 
